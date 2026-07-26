@@ -231,6 +231,18 @@ public class LegacyImageCardView extends BaseCardView {
         }
     }
 
+    /**
+     * Shows the item's position in a server-ranked list. A rank of zero or less hides the badge.
+     */
+    public void setRankBadge(int rank) {
+        if (rank > 0) {
+            binding.rankNumber.setText(nf.format(rank));
+            binding.rankIndicator.setVisibility(VISIBLE);
+        } else {
+            binding.rankIndicator.setVisibility(GONE);
+        }
+    }
+
     public void setUnwatchedCount(int count) {
         if (count > 0) {
             binding.unwatchedCount.setText(count > 99 ? getContext().getString(R.string.watch_count_overflow) : nf.format(count));

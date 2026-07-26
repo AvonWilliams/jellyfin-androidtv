@@ -44,6 +44,14 @@ class DisplayPreferencesScreen : OptionsFragment() {
 
 			if (allowViewSelection) {
 				checkbox {
+					setTitle(R.string.pref_enable_browse_modes)
+					contentOn = requireContext().getString(R.string.pref_enable_browse_modes_description)
+					contentOff = contentOn
+
+					bind(libraryPreferences, LibraryPreferences.enableBrowseModes)
+				}
+
+				checkbox {
 					setTitle(R.string.enable_smart_view)
 					contentOn = requireContext().getString(R.string.enable_smart_view_description)
 					contentOff = contentOn

@@ -22,6 +22,11 @@ class LibraryPreferences(
 		val imageType = enumPreference("ImageType", ImageType.POSTER)
 		val gridDirection = enumPreference("GridDirection", GridDirection.HORIZONTAL)
 		val enableSmartScreen = booleanPreference("SmartScreen", false)
+		val enableBrowseModes = booleanPreference("BrowseModes", true)
+
+		// Set once a browse mode has seeded its preset, so that a sort the user picks inside a
+		// mode afterwards is not overwritten on the next visit.
+		val browseModeSeeded = booleanPreference("BrowseModeSeeded", false)
 
 		// Filters
 		val filterFavoritesOnly = booleanPreference("FilterFavoritesOnly", false)
