@@ -54,9 +54,13 @@ public class ItemLauncher {
             case MOVIES:
             case TVSHOWS:
                 LibraryPreferences displayPreferences = preferencesRepository.getValue().getLibraryPreferences(baseItem.getDisplayPreferencesId());
+                boolean enableBrowseModes = displayPreferences.get(LibraryPreferences.Companion.getEnableBrowseModes());
                 boolean enableSmartScreen = displayPreferences.get(LibraryPreferences.Companion.getEnableSmartScreen());
 
-                if (!enableSmartScreen) return Destinations.INSTANCE.libraryBrowser(baseItem);
+                // Opening a library offers the ways of browsing it first, unless the user has
+                // turned that off in the library's display preferences.
+                if (enableBrowseModes) return Destinations.INSTANCE.browseModes(baseItem);
+                else if (!enableSmartScreen) return Destinations.INSTANCE.libraryBrowser(baseItem);
                 else return Destinations.INSTANCE.librarySmartScreen(baseItem);
             case MUSIC:
             case LIVETV:

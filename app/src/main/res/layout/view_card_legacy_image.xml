@@ -93,6 +93,36 @@
                 android:visibility="visible" />
         </FrameLayout>
 
+        <!-- Position within a server-ranked list, such as the Discover browse modes. -->
+        <FrameLayout
+            android:id="@+id/rankIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@id/main_image"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="4dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/circle_accent"
+                tools:ignore="ImageContrastCheck" />
+
+            <TextView
+                android:id="@+id/rankNumber"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textAlignment="center"
+                android:textSize="10sp"
+                tools:ignore="TextContrastCheck"
+                tools:text="1" />
+        </FrameLayout>
+
         <FrameLayout
             android:id="@+id/watchedIndicator"
             android:layout_width="wrap_content"

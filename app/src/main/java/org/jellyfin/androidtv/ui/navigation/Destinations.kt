@@ -11,6 +11,10 @@ import org.jellyfin.androidtv.ui.browsing.ByLetterFragment
 import org.jellyfin.androidtv.ui.browsing.CollectionFragment
 import org.jellyfin.androidtv.ui.browsing.GenericFolderFragment
 import org.jellyfin.androidtv.ui.browsing.SuggestedMoviesFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.BrowseModesFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.ByStudioFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.DiscoverFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.StudioItemsFragment
 import org.jellyfin.androidtv.ui.home.HomeFragment
 import org.jellyfin.androidtv.ui.itemdetail.FullDetailsFragment
 import org.jellyfin.androidtv.ui.itemdetail.ItemListFragment
@@ -54,6 +58,31 @@ object Destinations {
 	fun librarySmartScreen(item: BaseItemDto) = fragmentDestination<BrowseViewFragment>(
 		Extras.Folder to Json.Default.encodeToString(item),
 	)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun browseModes(item: BaseItemDto) = fragmentDestination<BrowseModesFragment>(
+		Extras.Folder to Json.Default.encodeToString(item),
+	)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun discover(item: BaseItemDto, browseMode: String) = fragmentDestination<DiscoverFragment>(
+		Extras.Folder to Json.Default.encodeToString(item),
+		Extras.BrowseMode to browseMode,
+	)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun libraryByStudio(item: BaseItemDto, includeType: String) =
+		fragmentDestination<ByStudioFragment>(
+			Extras.Folder to Json.Default.encodeToString(item),
+			Extras.IncludeType to includeType,
+		)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun libraryByStudioItems(item: BaseItemDto, studio: String) =
+		fragmentDestination<StudioItemsFragment>(
+			Extras.Folder to Json.Default.encodeToString(item),
+			Extras.Studio to studio,
+		)
 
 	// TODO only pass item id instead of complete JSON to browsing destinations
 	fun collectionBrowser(item: BaseItemDto) = fragmentDestination<CollectionFragment>(

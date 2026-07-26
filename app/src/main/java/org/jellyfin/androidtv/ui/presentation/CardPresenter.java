@@ -310,6 +310,7 @@ public class CardPresenter extends Presenter {
 
         protected void resetCardView() {
             mCardView.clearBanner();
+            mCardView.setRankBadge(0);
             mCardView.setUnwatchedCount(-1);
             mCardView.setProgress(0);
             mCardView.setRating(null);
