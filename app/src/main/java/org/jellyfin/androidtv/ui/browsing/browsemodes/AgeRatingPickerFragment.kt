@@ -1,6 +1,10 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.leanback.app.VerticalGridSupportFragment
 import androidx.leanback.widget.OnItemViewClickedListener
 import androidx.leanback.widget.Presenter
@@ -22,10 +26,12 @@ import org.jellyfin.androidtv.ui.presentation.CardPresenter
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.get
+import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.QueryFiltersLegacy
+import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
@@ -42,8 +48,9 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var folder: BaseItemDto
 	private lateinit var itemType: BaseItemKind
 	private lateinit var ratingsAdapter: MutableObjectAdapter<Any>
-	private var sortMode = SortMode.A_Z
+	private var sortMode = SortMode.RANDOM
 	private var rawRatings: List<String> = emptyList()
+	private var ratingCounts: Map<String, Int> = emptyMap()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -63,7 +70,23 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
-		val sortPresenter = CardPresenter(true, 48)
+		val sortPresenter = object : Presenter() {
+			override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
+				val tv = TextView(parent.context).apply {
+					isFocusable = true
+					isFocusableInTouchMode = true
+					gravity = Gravity.CENTER
+					setTextColor(Color.WHITE)
+					textSize = 14f
+					setPadding(24, 10, 24, 10)
+				}
+				return object : ViewHolder(tv) {}
+			}
+			override fun onBindViewHolder(vh: Presenter.ViewHolder, item: Any?) {
+				(vh.view as TextView).text = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
+			}
+			override fun onUnbindViewHolder(vh: Presenter.ViewHolder) {}
+		}
 		val ratingPresenter = CardPresenter(true, CARD_HEIGHT)
 		ratingsAdapter = MutableObjectAdapter(object : PresenterSelector() {
 			override fun getPresenter(item: Any?): Presenter {
@@ -78,7 +101,11 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 
 			if (baseItem.originalTitle == "__sort__") {
 				sortMode = sortMode.next()
-				refreshGrid()
+				if (sortMode.needsCounts && ratingCounts.isEmpty()) {
+					lifecycleScope.launch { fetchRatingCounts(); refreshGrid() }
+				} else {
+					refreshGrid()
+				}
 				return@OnItemViewClickedListener
 			}
 
@@ -117,9 +144,11 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 		ratingsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson)))
 
 		val sorted = when (sortMode) {
+			SortMode.RANDOM -> rawRatings.shuffled()
 			SortMode.A_Z -> rawRatings.sorted()
 			SortMode.Z_A -> rawRatings.sortedDescending()
-			SortMode.RANDOM -> rawRatings.shuffled()
+			SortMode.MOST_ITEMS -> rawRatings.sortedByDescending { ratingCounts[it] ?: 0 }
+			SortMode.FEWEST_ITEMS -> rawRatings.sortedBy { ratingCounts[it] ?: 0 }
 		}
 
 		sorted.forEach { rating ->
@@ -144,5 +173,26 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 			),
 		)
 		return response.content.officialRatings.orEmpty()
+	}
+
+	private suspend fun fetchRatingCounts() {
+		val counts = mutableMapOf<String, Int>()
+		rawRatings.forEach { rating ->
+			try {
+				val result = apiClient.itemsApi.getItems(
+					GetItemsRequest(
+						parentId = folder.id,
+						includeItemTypes = setOf(itemType),
+						officialRatings = setOf(rating),
+						recursive = true,
+						limit = 0,
+					)
+				)
+				counts[rating] = result.content.totalRecordCount ?: 0
+			} catch (_: Exception) {
+				counts[rating] = 0
+			}
+		}
+		ratingCounts = counts
 	}
 }

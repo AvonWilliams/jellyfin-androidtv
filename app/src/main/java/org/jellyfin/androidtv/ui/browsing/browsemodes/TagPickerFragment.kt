@@ -1,6 +1,10 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.leanback.app.VerticalGridSupportFragment
 import androidx.leanback.widget.OnItemViewClickedListener
 import androidx.leanback.widget.Presenter
@@ -22,10 +26,12 @@ import org.jellyfin.androidtv.ui.presentation.CardPresenter
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.get
+import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.QueryFiltersLegacy
+import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
@@ -43,8 +49,9 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var mode: BrowseMode
 	private lateinit var itemType: BaseItemKind
 	private lateinit var tagsAdapter: MutableObjectAdapter<Any>
-	private var sortMode = SortMode.A_Z
+	private var sortMode = SortMode.RANDOM
 	private var rawTags: List<String> = emptyList()
+	private var tagCounts: Map<String, Int> = emptyMap()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -62,7 +69,23 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
-		val sortPresenter = CardPresenter(true, 48)
+		val sortPresenter = object : Presenter() {
+			override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
+				val tv = TextView(parent.context).apply {
+					isFocusable = true
+					isFocusableInTouchMode = true
+					gravity = Gravity.CENTER
+					setTextColor(Color.WHITE)
+					textSize = 14f
+					setPadding(24, 10, 24, 10)
+				}
+				return object : ViewHolder(tv) {}
+			}
+			override fun onBindViewHolder(vh: Presenter.ViewHolder, item: Any?) {
+				(vh.view as TextView).text = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
+			}
+			override fun onUnbindViewHolder(vh: Presenter.ViewHolder) {}
+		}
 		val tagPresenter = CardPresenter(true, CARD_HEIGHT)
 		tagsAdapter = MutableObjectAdapter(object : PresenterSelector() {
 			override fun getPresenter(item: Any?): Presenter {
@@ -78,7 +101,11 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 			// Sort button
 			if (baseItem.originalTitle == "__sort__") {
 				sortMode = sortMode.next()
-				refreshGrid()
+				if (sortMode.needsCounts && tagCounts.isEmpty()) {
+					lifecycleScope.launch { fetchTagCounts(); refreshGrid() }
+				} else {
+					refreshGrid()
+				}
 				return@OnItemViewClickedListener
 			}
 
@@ -119,9 +146,11 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		tagsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson)))
 
 		val sorted = when (sortMode) {
+			SortMode.RANDOM -> rawTags.shuffled()
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()
-			SortMode.RANDOM -> rawTags.shuffled()
+			SortMode.MOST_ITEMS -> rawTags.sortedByDescending { tagCounts[it] ?: 0 }
+			SortMode.FEWEST_ITEMS -> rawTags.sortedBy { tagCounts[it] ?: 0 }
 		}
 
 		sorted.forEach { tagName ->
@@ -151,17 +180,43 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		val curatedSet = curatedTagsFor(mode).toSet()
 		return available.filter { curatedSet.contains(it) }.sorted()
 	}
+
+	/** Fetches per-tag item counts for Most/Fewest items sorting. */
+	private suspend fun fetchTagCounts() {
+		val counts = mutableMapOf<String, Int>()
+		rawTags.forEach { tag ->
+			try {
+				val result = apiClient.itemsApi.getItems(
+					GetItemsRequest(
+						parentId = folder.id,
+						includeItemTypes = setOf(itemType),
+						tags = setOf(tag),
+						recursive = true,
+						limit = 0,
+					)
+				)
+				counts[tag] = result.content.totalRecordCount ?: 0
+			} catch (_: Exception) {
+				counts[tag] = 0
+			}
+		}
+		tagCounts = counts
+	}
 }
 
-enum class SortMode(val label: String) {
+enum class SortMode(val label: String, val needsCounts: Boolean = false) {
+	RANDOM("Random"),
 	A_Z("A–Z"),
 	Z_A("Z–A"),
-	RANDOM("Random");
+	MOST_ITEMS("Most items", needsCounts = true),
+	FEWEST_ITEMS("Fewest items", needsCounts = true);
 
 	fun next(): SortMode = when (this) {
-		A_Z -> Z_A
-		Z_A -> RANDOM
 		RANDOM -> A_Z
+		A_Z -> Z_A
+		Z_A -> MOST_ITEMS
+		MOST_ITEMS -> FEWEST_ITEMS
+		FEWEST_ITEMS -> RANDOM
 	}
 }
 

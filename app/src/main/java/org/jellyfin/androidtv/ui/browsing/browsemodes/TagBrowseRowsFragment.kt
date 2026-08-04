@@ -1,6 +1,10 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.leanback.app.RowsSupportFragment
 import androidx.leanback.widget.ArrayObjectAdapter
 import androidx.leanback.widget.HeaderItem
@@ -27,6 +31,7 @@ import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.androidtv.ui.presentation.PositionableListRowPresenter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.get
+import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
@@ -52,8 +57,9 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 	private lateinit var mode: BrowseMode
 	private lateinit var itemType: BaseItemKind
 	private lateinit var rowsAdapter: MutableObjectAdapter<Row>
-	private var sortMode = SortMode.A_Z
+	private var sortMode = SortMode.RANDOM
 	private var rawTags: List<String> = emptyList()
+	private var tagCounts: Map<String, Int> = emptyMap()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -76,7 +82,11 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem
 			if (baseItem?.originalTitle == "__sort__") {
 				sortMode = sortMode.next()
-				refreshRows()
+				if (sortMode.needsCounts && tagCounts.isEmpty()) {
+					lifecycleScope.launch { fetchTagCounts(); refreshRows() }
+				} else {
+					refreshRows()
+				}
 			} else if (item is BaseRowItem) {
 				itemLauncher.launch(item, null, requireContext())
 			}
@@ -110,14 +120,32 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			put("Type", "Folder")
 		}.toString()
 		val sortItem = BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson))
-		val sortRowAdapter = ArrayObjectAdapter(CardPresenter(true, 48))
+		val sortRowAdapter = ArrayObjectAdapter(object : Presenter() {
+			override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
+				val tv = TextView(parent.context).apply {
+					isFocusable = true
+					isFocusableInTouchMode = true
+					gravity = Gravity.CENTER
+					setTextColor(Color.WHITE)
+					textSize = 14f
+					setPadding(24, 10, 24, 10)
+				}
+				return object : ViewHolder(tv) {}
+			}
+			override fun onBindViewHolder(vh: Presenter.ViewHolder, item: Any?) {
+				(vh.view as TextView).text = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
+			}
+			override fun onUnbindViewHolder(vh: Presenter.ViewHolder) {}
+		})
 		sortRowAdapter.add(sortItem)
 		rowsAdapter.add(ListRow(HeaderItem(""), sortRowAdapter))
 
 		val sorted = when (sortMode) {
+			SortMode.RANDOM -> rawTags.shuffled()
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()
-			SortMode.RANDOM -> rawTags.shuffled()
+			SortMode.MOST_ITEMS -> rawTags.sortedByDescending { tagCounts[it] ?: 0 }
+			SortMode.FEWEST_ITEMS -> rawTags.sortedBy { tagCounts[it] ?: 0 }
 		}
 
 		val cardPresenter = CardPresenter(false, CARD_HEIGHT)
@@ -165,5 +193,26 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 
 		val curatedSet = curatedTagsFor(mode).toSet()
 		return available.filter { curatedSet.contains(it) }.sorted()
+	}
+
+	private suspend fun fetchTagCounts() {
+		val counts = mutableMapOf<String, Int>()
+		rawTags.forEach { tag ->
+			try {
+				val result = apiClient.itemsApi.getItems(
+					GetItemsRequest(
+						parentId = folder.id,
+						includeItemTypes = setOf(itemType),
+						tags = setOf(tag),
+						recursive = true,
+						limit = 0,
+					)
+				)
+				counts[tag] = result.content.totalRecordCount ?: 0
+			} catch (_: Exception) {
+				counts[tag] = 0
+			}
+		}
+		tagCounts = counts
 	}
 }
