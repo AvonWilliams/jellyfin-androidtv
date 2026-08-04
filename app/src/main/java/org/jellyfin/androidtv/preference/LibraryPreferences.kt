@@ -29,6 +29,10 @@ class LibraryPreferences(
 		// mode afterwards is not overwritten on the next visit.
 		val browseModeSeeded = booleanPreference("BrowseModeSeeded", false)
 
+		// When true, tag-based modes (Mood, Story Themes, etc.) open as horizontal poster
+		// shelves instead of a flat tag-picker grid.
+		val enableTagRibbonShelves = booleanPreference("TagRibbonShelves", true)
+
 		// Filters
 		val filterFavoritesOnly = booleanPreference("FilterFavoritesOnly", false)
 		val filterUnwatchedOnly = booleanPreference("FilterUnwatchedOnly", false)

@@ -58,6 +58,14 @@ class DisplayPreferencesScreen : OptionsFragment() {
 
 					bind(libraryPreferences, LibraryPreferences.enableSmartScreen)
 				}
+
+				checkbox {
+					setTitle(R.string.pref_enable_tag_ribbon_shelves)
+					contentOn = requireContext().getString(R.string.pref_enable_tag_ribbon_shelves_description)
+					contentOff = contentOn
+
+					bind(libraryPreferences, LibraryPreferences.enableTagRibbonShelves)
+				}
 			}
 		}
 	}
