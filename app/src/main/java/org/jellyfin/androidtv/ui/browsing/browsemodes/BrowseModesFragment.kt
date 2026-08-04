@@ -70,7 +70,7 @@ class BrowseModesFragment : VerticalGridSupportFragment() {
 				navigationRepository.navigate(Destinations.discover(folder, definition.mode.key))
 
 			definition.destination == BrowseModeDestination.TAG_PICKER -> {
-				if (USE_TAG_RIBBON_SHELVES) {
+				if (useTagRibbonShelves) {
 					navigationRepository.navigate(Destinations.tagBrowseRows(folder, definition.mode.key))
 				} else {
 					navigationRepository.navigate(Destinations.tagPicker(folder, definition.mode.key))

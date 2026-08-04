@@ -62,7 +62,6 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		// Show the mode name as the screen title.
 		val label = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
 		title = label?.let { getString(it) } ?: mode.key
 
@@ -72,7 +71,9 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		adapter = tagsAdapter
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			val tag = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name ?: return@OnItemViewClickedListener
+			// Use originalTitle (raw tag) for filtering; name is title-cased for display.
+			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
+			val tag = baseItem.originalTitle ?: baseItem.name ?: return@OnItemViewClickedListener
 			navigationRepository.navigate(
 				Destinations.libraryByTagItems(folder, tag, itemType.serialName)
 			)
@@ -92,13 +93,12 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		if (!isAdded) return@launch
 
 		tags.forEach { tagName ->
-			// Build a synthetic item so the grid card presenter has something to render.
-			// CardPresenter shows item.name as the label.
-			// Build safely through kotlinx.serialization to avoid JSON injection
-			// when tag names contain quotes or backslashes. Name, Id, and Type
-			// are required fields on BaseItemDto — Id must be a UUID string.
+			val displayName = tagName.toTitleCase()
+			// Name=title-cased for display, OriginalTitle=raw for tag filtering.
+			// Id and Type are required fields on BaseItemDto.
 			val json = buildJsonObject {
-				put("Name", tagName)
+				put("Name", displayName)
+				put("OriginalTitle", tagName)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
@@ -111,7 +111,6 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	private suspend fun fetchMatchingTags(): List<String> {
 		val userId = userRepository.currentUser.value?.id ?: return emptyList()
 
-		// Fetch available tags from the server.
 		val response = apiClient.get<QueryFiltersLegacy>(
 			pathTemplate = "/Items/Filters",
 			queryParameters = mapOf(
@@ -122,7 +121,6 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		)
 		val available = response.content.tags.orEmpty()
 
-		// Intersect with the curated list for this mode.
 		val curatedSet = curatedTagsFor(mode).toSet()
 		return available.filter { curatedSet.contains(it) }.sorted()
 	}
@@ -136,4 +134,25 @@ internal fun curatedTagsFor(mode: BrowseMode): List<String> = when (mode) {
 	BrowseMode.WORLDS -> WORLD_TAGS
 	BrowseMode.STYLES -> STYLE_TAGS
 	else -> emptyList()
+}
+
+/**
+ * Capitalises each word in a tag name for display, handling hyphens as word boundaries.
+ * "feel good" → "Feel Good", "post-apocalyptic" → "Post-Apocalyptic".
+ *
+ * Ported from the web client's toTitleCase in pickTiles.ts.
+ */
+internal fun String.toTitleCase(): String = buildString {
+	var capitalise = true
+	for (char in this@toTitleCase) {
+		if (char.isWhitespace() || char == '-') {
+			capitalise = true
+			append(char)
+		} else if (capitalise) {
+			append(char.uppercaseChar())
+			capitalise = false
+		} else {
+			append(char)
+		}
+	}
 }

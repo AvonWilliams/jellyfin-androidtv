@@ -127,7 +127,7 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			)
 			rowAdapter.Retrieve()
 
-			val row = ListRow(HeaderItem(tag), rowAdapter)
+			val row = ListRow(HeaderItem(tag.toTitleCase()), rowAdapter)
 			rowsAdapter.add(row)
 		}
 	}

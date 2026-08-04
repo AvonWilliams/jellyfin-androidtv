@@ -94,7 +94,16 @@ enum class BrowseModeDestination {
  *
  * @see [TagBrowseRowsFragment]
  */
-const val USE_TAG_RIBBON_SHELVES = false
+/**
+ * When `true`, tag-based modes (Mood, Story Themes, Plot Elements, Worlds, Styles)
+ * open as stacked horizontal poster shelves instead of the flat tag-picker grid.
+ *
+ * Set to `false` to use the grid picker. Toggled at runtime — the value is read on
+ * each tile click so switching takes effect immediately.
+ *
+ * TODO: persist this in LibraryPreferences and add a toggle in DisplayPreferencesScreen.
+ */
+var useTagRibbonShelves = false
 
 /** ISO 8601 date [n] months in the past, for seeding date-cutoff presets. */
 private fun monthsAgo(n: Int): String {
