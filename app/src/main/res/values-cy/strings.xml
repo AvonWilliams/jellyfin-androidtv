@@ -42,7 +42,6 @@
     <string name="lbl_on">Ar</string>
     <string name="lbl_tomorrow">Yfory</string>
     <string name="lbl_today">Heddiw</string>
-    <string name="lbl_unwatched">Heb ei wylio</string>
     <string name="lbl_empty">Gwag</string>
     <string name="lbl_loading_elipses">Yn llwytho…</string>
     <string name="lbl_born">"Geni "</string>
@@ -122,7 +121,6 @@
     <string name="lbl_other">Arall</string>
     <string name="lbl_movies">Ffilmiau</string>
     <string name="lbl_collections">Casgliadau</string>
-    <string name="lbl_favorites">Ffefrynnau</string>
     <string name="lbl_latest">Ychwanegwyd yn ddiweddar</string>
     <string name="lbl_search">Chwilio</string>
     <string name="lbl_genres">Genreau</string>

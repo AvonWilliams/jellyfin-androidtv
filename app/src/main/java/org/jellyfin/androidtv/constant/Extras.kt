@@ -6,4 +6,7 @@ object Extras {
 	const val IncludeType = "type_include"
 	const val BrowseMode = "browse_mode"
 	const val Studio = "studio"
+	const val Tag = "tag"
+	const val Decade = "decade"
+	const val Rating = "rating"
 }

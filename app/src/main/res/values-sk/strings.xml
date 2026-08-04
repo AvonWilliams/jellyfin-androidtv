@@ -8,7 +8,6 @@
     <string name="lbl_other">Ostatné</string>
     <string name="lbl_tv_series">Seriály</string>
     <string name="lbl_movies">Filmy</string>
-    <string name="lbl_favorites">Obľúbené</string>
     <string name="lbl_by_name">Podľa mena</string>
     <string name="lbl_latest">Nedávno pridané</string>
     <string name="lbl_search">Vyhľadávanie</string>
@@ -206,7 +205,6 @@
     <string name="lbl_starting_with">začať s tými, ktorých meno začína s</string>
     <string name="desc_debug">Poskytnúť extra informácie pre debugovanie</string>
     <string name="lbl_tune_to_channel">Naladiť na kanál</string>
-    <string name="lbl_unwatched">Nepozreté</string>
     <string name="msg_no_playable_items">Žiadne prehrateľné položky</string>
     <string name="lbl_mark_played">Označiť ako prehrané</string>
     <string name="lbl_mark_unplayed">Označiť ako neprehrané</string>

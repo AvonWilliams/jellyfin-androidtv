@@ -132,7 +132,6 @@
     <string name="lbl_tomorrow">Imorgon</string>
     <string name="lbl_today">Idag</string>
     <string name="lbl_load_channels">"Ladda kanaler "</string>
-    <string name="lbl_unwatched">Icke sedda</string>
     <string name="msg_no_playable_items">Inga uppspelningsbara föremål</string>
     <string name="lbl_now_playing_album">från %1$s</string>
     <string name="lbl_now_playing_track">%1$s av %2$s</string>
@@ -202,7 +201,6 @@
     <string name="lbl_other_channels">Andra kanaler</string>
     <string name="lbl_favorite_channels">Favoritkanaler</string>
     <string name="lbl_coming_up">Kommer härnäst</string>
-    <string name="lbl_favorites">Favoriter</string>
     <string name="lbl_by_name">Efter namn</string>
     <string name="lbl_latest">Senast tillagda</string>
     <string name="msg_not_implemented">" stöds ännu inte"</string>

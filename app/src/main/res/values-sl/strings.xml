@@ -58,7 +58,6 @@
     <string name="lbl_other_channels">Ostali kanali</string>
     <string name="lbl_favorite_channels">Najljubši kanali</string>
     <string name="lbl_coming_up">Sledi</string>
-    <string name="lbl_favorites">Najljubši</string>
     <string name="lbl_by_name">Po imenu</string>
     <string name="lbl_latest">Najnovejše</string>
     <string name="msg_not_implemented">" ni implementirano"</string>
@@ -125,7 +124,6 @@
     <string name="lbl_tomorrow">Jutri</string>
     <string name="lbl_today">Danes</string>
     <string name="lbl_load_channels">"Naloži kanale "</string>
-    <string name="lbl_unwatched">Neogledano</string>
     <string name="msg_no_playable_items">Nobenih vsebin ni mogoče predvajati</string>
     <string name="lbl_now_playing_album">od %1$s</string>
     <string name="lbl_now_playing_track">%1$s od %2$s</string>

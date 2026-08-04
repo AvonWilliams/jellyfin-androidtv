@@ -95,7 +95,6 @@
     <string name="lbl_tomorrow">Yarın</string>
     <string name="lbl_today">Bugün</string>
     <string name="lbl_load_channels">"Kanalları yükle "</string>
-    <string name="lbl_unwatched">İzlenmemiş</string>
     <string name="msg_no_playable_items">Oynanabilir öğe yok</string>
     <string name="lbl_now_playing_album">%1$s \'den</string>
     <string name="lbl_now_playing_track">%1$s - %2$s</string>
@@ -166,7 +165,6 @@
     <string name="lbl_other_channels">Diğer kanallar</string>
     <string name="lbl_favorite_channels">Favori kanallar</string>
     <string name="lbl_coming_up">Sıradaki</string>
-    <string name="lbl_favorites">Favoriler</string>
     <string name="lbl_by_name">İsme göre</string>
     <string name="lbl_latest">Son eklenen</string>
     <string name="msg_not_implemented">" uygulanmadı"</string>

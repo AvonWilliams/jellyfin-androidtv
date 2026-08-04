@@ -19,7 +19,6 @@
     <string name="msg_not_implemented">" niet geïmplementeerd"</string>
     <string name="lbl_latest">Onlangs toegevoegd</string>
     <string name="lbl_by_name">Op naam</string>
-    <string name="lbl_favorites">Favorieten</string>
     <string name="lbl_coming_up">Straks</string>
     <string name="lbl_favorite_channels">Favoriete kanalen</string>
     <string name="lbl_other_channels">Andere kanalen</string>
@@ -84,7 +83,6 @@
     <string name="lbl_remove_favorite">Favoriet verwijderen</string>
     <string name="lbl_add_favorite">Favoriet toevoegen</string>
     <string name="msg_no_playable_items">Geen afspeelbare items</string>
-    <string name="lbl_unwatched">Ongekeken</string>
     <string name="lbl_load_channels">"Laad kanalen "</string>
     <string name="lbl_today">Vandaag</string>
     <string name="lbl_tomorrow">Morgen</string>

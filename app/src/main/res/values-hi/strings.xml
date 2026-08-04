@@ -14,7 +14,6 @@
     <string name="msg_not_implemented">" लागू नहीं किया गया है"</string>
     <string name="lbl_latest">हाल ही में जोड़ा हुआ</string>
     <string name="lbl_by_name">नाम के अनुसार</string>
-    <string name="lbl_favorites">पसंदीदा</string>
     <string name="lbl_coming_up">आ रहा है</string>
     <string name="lbl_other_channels">अन्य चैनल</string>
     <string name="lbl_movies">मूवीज़</string>
@@ -118,7 +117,6 @@
     <string name="lbl_starting_with">जिनके नाम से शुरू होता है</string>
     <string name="lbl_add_favorite">पसंदीदा जोड़ें</string>
     <string name="lbl_now_playing_track">%2$s में से %1$s</string>
-    <string name="lbl_unwatched">नहीं देखा हुआ</string>
     <string name="msg_will_record">रिकॉर्ड करेंगे</string>
     <string name="lbl_audio_output">ऑडियो आउटपुट</string>
     <string name="lbl_goto_series">सीरीज पर जाएं</string>

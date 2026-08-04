@@ -19,7 +19,6 @@
     <string name="msg_not_implemented">" jüzege asyrylmağan"</string>
     <string name="lbl_latest">Eñ keiıngı</string>
     <string name="lbl_by_name">Atymen</string>
-    <string name="lbl_favorites">Tañdaulylar</string>
     <string name="lbl_coming_up">Aldağy</string>
     <string name="lbl_favorite_channels">Tandauly arnalar</string>
     <string name="lbl_other_channels">Basqa arnalar</string>
@@ -84,7 +83,6 @@
     <string name="lbl_remove_favorite">Tañdaulyny alastau</string>
     <string name="lbl_add_favorite">Tañdaulyny üsteu</string>
     <string name="msg_no_playable_items">Oinatylatyn tarmaqtar joq</string>
-    <string name="lbl_unwatched">Qaralmağan</string>
     <string name="lbl_load_channels">"Arnalardy jükteu "</string>
     <string name="lbl_today">Bügın</string>
     <string name="lbl_tomorrow">Erteñ</string>

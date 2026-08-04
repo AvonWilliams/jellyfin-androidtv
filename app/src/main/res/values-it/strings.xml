@@ -18,7 +18,6 @@
     <string name="msg_not_implemented">" non implementato"</string>
     <string name="lbl_latest">Ultimi</string>
     <string name="lbl_by_name">Per nome</string>
-    <string name="lbl_favorites">Preferiti</string>
     <string name="lbl_coming_up">In arrivo</string>
     <string name="lbl_favorite_channels">Canali preferiti</string>
     <string name="lbl_other_channels">Altri canali</string>
@@ -101,7 +100,6 @@
     <string name="lbl_tomorrow">Domani</string>
     <string name="lbl_today">Oggi</string>
     <string name="lbl_load_channels">"Carica canali "</string>
-    <string name="lbl_unwatched">Non visto</string>
     <string name="lbl_now_playing_track">%1$s di %2$s</string>
     <string name="lbl_add_favorite">Aggiungi preferito</string>
     <string name="lbl_remove_favorite">Rimuovi preferito</string>

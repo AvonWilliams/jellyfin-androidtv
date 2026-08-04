@@ -71,7 +71,6 @@
     <string name="lbl_other_channels">Egyéb csatornák</string>
     <string name="lbl_favorite_channels">Kedvenc csatornák</string>
     <string name="lbl_coming_up">A következőekben</string>
-    <string name="lbl_favorites">Kedvencek</string>
     <string name="lbl_search">Keresés</string>
     <string name="lbl_genres">Műfajok</string>
     <string name="lbl_suggested">Javasolt</string>
@@ -112,7 +111,6 @@
     <string name="lbl_tomorrow">Holnap</string>
     <string name="lbl_today">Ma</string>
     <string name="lbl_load_channels">"Csatornák betöltése "</string>
-    <string name="lbl_unwatched">Nem lejátszott</string>
     <string name="msg_no_playable_items">Nincs lejátszható elem</string>
     <string name="lbl_now_playing_album">%1$s -tól</string>
     <string name="lbl_starting_with">Kezdve azokkal, amelyeknek a neve ezzel kezdődik</string>

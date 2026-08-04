@@ -13,7 +13,6 @@
     <string name="lbl_other_channels">Kiti kanalai</string>
     <string name="lbl_favorite_channels">Mėgstamiausi kanalai</string>
     <string name="lbl_coming_up">Jau greitai</string>
-    <string name="lbl_favorites">Mėgstamiausi</string>
     <string name="lbl_by_name">Pagal pavadinimą</string>
     <string name="lbl_latest">Nesenai pridėta</string>
     <string name="lbl_search">Paieška</string>
@@ -55,7 +54,6 @@
     <string name="lbl_audio_output">Garso išvestis</string>
     <string name="lbl_tomorrow">Rytoj</string>
     <string name="lbl_today">Šiandien</string>
-    <string name="lbl_unwatched">Nežiūrėtas</string>
     <string name="lbl_now_playing_album">nuo %1$s</string>
     <string name="lbl_play_first_unwatched">Paleisti pirmą nežiūrėtą</string>
     <string name="lbl_search_hint">Teksto paieška (pasirinkite klaviatūrai)</string>

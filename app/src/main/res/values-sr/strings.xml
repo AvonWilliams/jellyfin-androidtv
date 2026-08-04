@@ -34,7 +34,6 @@
     <string name="lbl_other_channels">Остали канали</string>
     <string name="lbl_favorite_channels">Омиљени канали</string>
     <string name="lbl_coming_up">Ускоро</string>
-    <string name="lbl_favorites">Омиљено</string>
     <string name="lbl_by_name">По називу</string>
     <string name="lbl_latest">Недавно додато</string>
     <string name="msg_not_implemented">" није уграђено"</string>
@@ -240,7 +239,6 @@
     <string name="lbl_tomorrow">Сутра</string>
     <string name="lbl_today">Данас</string>
     <string name="lbl_load_channels">"Учитај канале "</string>
-    <string name="lbl_unwatched">Није гледано</string>
     <string name="msg_no_playable_items">Нема ставки за репродукцију</string>
     <string name="lbl_now_playing_album">од %1$s</string>
     <string name="lbl_now_playing_track">%1$s од %2$s</string>

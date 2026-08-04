@@ -25,7 +25,6 @@
     <string name="lbl_other_channels">অন্যান্য চ্যানেলসমূহ</string>
     <string name="lbl_favorite_channels">প্রিয় চ্যানেলসমূহ</string>
     <string name="lbl_coming_up">আসছে</string>
-    <string name="lbl_favorites">প্রিয়</string>
     <string name="lbl_by_name">নাম অনুযায়ী</string>
     <string name="lbl_latest">সর্বশেষ সংযুক্ত</string>
     <string name="msg_not_implemented">" বাস্তবায়িত হয়নি"</string>
@@ -115,7 +114,6 @@
     <string name="lbl_end_padding">প্যাডিং শেষ</string>
     <string name="msg_cancel_entire_series">আপনি কী নিশ্চিতভাবে সম্পুর্ন সিরিজ বাতিল করতে চান\?</string>
     <string name="lbl_add_favorite">প্রিয়ের তালিকায় যুক্ত করুন</string>
-    <string name="lbl_unwatched">অদেখা</string>
     <string name="lbl_tune_to_channel">চ্যানেল টিউন করুন</string>
     <string name="msg_recording_now">রেকর্ডিং হচ্ছে</string>
     <string name="lbl_play_first_unwatched">প্রথম অদেখা চালু করুন</string>

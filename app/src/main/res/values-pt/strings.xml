@@ -51,7 +51,6 @@
     <string name="lbl_latest">Adicionado recentemente</string>
     <string name="lbl_latest_in">Adicionado recentemente em %1$s</string>
     <string name="lbl_by_name">Por nome</string>
-    <string name="lbl_favorites">Favoritos</string>
     <string name="lbl_favorite_channels">Canais favoritos</string>
     <string name="lbl_other_channels">Outros canais</string>
     <string name="lbl_collections">Coleções</string>

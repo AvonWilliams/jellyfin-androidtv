@@ -11,7 +11,6 @@
     <string name="chapters">Раздзелы</string>
     <string name="lbl_settings">Налады</string>
     <string name="lbl_genres">Жанры</string>
-    <string name="lbl_favorites">Абранае</string>
     <string name="lbl_movies">Фільмы</string>
     <string name="lbl_pause">Паўза</string>
     <string name="lbl_cancel">Адмяніць</string>
@@ -94,7 +93,6 @@
     <string name="lbl_now_playing_track">%1$s з %2$s</string>
     <string name="lbl_now_playing_album">з %1$s</string>
     <string name="msg_no_playable_items">Няма прайграваных элементаў</string>
-    <string name="lbl_unwatched">Непрагледжанае</string>
     <string name="lbl_today">Сёння</string>
     <string name="lbl_tomorrow">Заўтра</string>
     <string name="license_license">Ліцэнзія</string>

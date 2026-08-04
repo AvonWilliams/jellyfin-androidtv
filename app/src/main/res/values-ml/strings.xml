@@ -247,7 +247,6 @@
     <string name="lbl_tomorrow">നാളെ</string>
     <string name="lbl_today">ഇന്ന്</string>
     <string name="lbl_load_channels">"ചാനലുകൾ ലോഡുചെയ്യുക "</string>
-    <string name="lbl_unwatched">കാണാത്തത്</string>
     <string name="msg_no_playable_items">പ്ലേ ചെയ്യാവുന്ന ഇനങ്ങളൊന്നുമില്ല</string>
     <string name="lbl_add_favorite">പ്രിയപ്പെട്ടവ ചേർക്കുക</string>
     <string name="lbl_remove_favorite">പ്രിയപ്പെട്ടവ നീക്കംചെയ്യുക</string>
@@ -312,7 +311,6 @@
     <string name="lbl_other_channels">മറ്റ് ചാനലുകൾ</string>
     <string name="lbl_favorite_channels">പ്രിയപ്പെട്ട ചാനലുകൾ</string>
     <string name="lbl_coming_up">അടുത്തതായി</string>
-    <string name="lbl_favorites">പ്രിയങ്കരങ്ങൾ</string>
     <string name="lbl_by_name">പേരുകൊണ്ട്</string>
     <string name="enable_playback_module_description">ഇതൊരു പരീക്ഷണാത്മക സവിശേഷതയാണ്. ഒരു പിന്തുണയും നൽകിയിട്ടില്ല.</string>
     <string name="lbl_fit">സാധാരണ</string>

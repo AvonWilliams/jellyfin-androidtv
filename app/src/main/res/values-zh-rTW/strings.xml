@@ -25,7 +25,6 @@
     <string name="lbl_movies">電影</string>
     <string name="lbl_other_channels">其它頻道</string>
     <string name="lbl_favorite_channels">我的最愛頻道</string>
-    <string name="lbl_favorites">我的最愛</string>
     <string name="lbl_by_name">依名稱排序</string>
     <string name="lbl_latest">最近新增</string>
     <string name="lbl_search">搜尋</string>
@@ -55,7 +54,6 @@
     <string name="msg_no_playable_items">沒有可播放的項目</string>
     <string name="lbl_tomorrow">明天</string>
     <string name="lbl_today">今天</string>
-    <string name="lbl_unwatched">未觀看</string>
     <string name="lbl_add_favorite">新增收藏</string>
     <string name="lbl_remove_favorite">移除收藏</string>
     <string name="lbl_mark_unplayed">標記為未播放</string>

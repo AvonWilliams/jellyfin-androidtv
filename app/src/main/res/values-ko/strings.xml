@@ -15,7 +15,6 @@
     <string name="lbl_status">%1$s / %2$s</string>
     <string name="lbl_genres">장르</string>
     <string name="lbl_search">검색</string>
-    <string name="lbl_favorites">즐겨찾기</string>
     <string name="lbl_coming_up">방송 예정</string>
     <string name="lbl_favorite_channels">선호 채널</string>
     <string name="lbl_collections">컬렉션</string>
@@ -73,7 +72,6 @@
     <string name="lbl_remove_favorite">즐겨찾기에서 제거</string>
     <string name="lbl_add_favorite">즐겨찾기에 추가</string>
     <string name="msg_no_playable_items">재생 가능한 항목 없음</string>
-    <string name="lbl_unwatched">시청하지 않음</string>
     <string name="lbl_load_channels">"채널 불러오기 "</string>
     <string name="lbl_today">오늘</string>
     <string name="lbl_tomorrow">내일</string>

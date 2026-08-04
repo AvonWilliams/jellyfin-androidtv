@@ -29,7 +29,6 @@
     <string name="lbl_other_channels">Други канали</string>
     <string name="lbl_favorite_channels">Омилени канали</string>
     <string name="lbl_coming_up">Следно</string>
-    <string name="lbl_favorites">Омилени</string>
     <string name="lbl_by_name">По име</string>
     <string name="lbl_latest">Последно додадено</string>
     <string name="msg_not_implemented">" не е имплементирано"</string>
@@ -393,7 +392,6 @@
     <string name="msg_no_playable_items">Нема ставки за репродукција</string>
     <string name="lbl_sorted_by">сортирано по</string>
     <string name="pref_button_remapping_description">Притиснете било кое копче на далечинскиот управувач од ТВ да го доделите</string>
-    <string name="lbl_unwatched">Негледано</string>
     <string name="lbl_runs">Во тек</string>
     <string name="lbl_tune_to_channel">Прилагоди на канал</string>
     <string name="user_picker_disable_title">Оневозможи</string>

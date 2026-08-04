@@ -44,7 +44,6 @@
     <string name="lbl_tomorrow">Huomenna</string>
     <string name="lbl_today">Tänään</string>
     <string name="lbl_load_channels">"Lataa kanavat "</string>
-    <string name="lbl_unwatched">Katsomattomat</string>
     <string name="msg_no_playable_items">Ei toistettavia kohteita</string>
     <string name="lbl_add_favorite">Lisää suosikkeihin</string>
     <string name="lbl_remove_favorite">Poista suosikeista</string>
@@ -98,7 +97,6 @@
     <string name="lbl_other_channels">Muut kanavat</string>
     <string name="lbl_favorite_channels">Suosikkikanavat</string>
     <string name="lbl_coming_up">Tulossa</string>
-    <string name="lbl_favorites">Suosikit</string>
     <string name="lbl_by_name">Nimellä</string>
     <string name="msg_not_implemented">" ei ole toteutettu"</string>
     <string name="lbl_search">Haku</string>
