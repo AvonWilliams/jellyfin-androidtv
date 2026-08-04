@@ -658,6 +658,8 @@ public class BrowseGridFragment extends Fragment implements View.OnKeyListener {
         FilterOptions filters = new FilterOptions();
         filters.setFavoriteOnly(libraryPreferences.get(LibraryPreferences.Companion.getFilterFavoritesOnly()));
         filters.setUnwatchedOnly(libraryPreferences.get(LibraryPreferences.Companion.getFilterUnwatchedOnly()));
+        filters.setMinDateLastSaved(libraryPreferences.get(LibraryPreferences.Companion.getFilterMinDateLastSaved()));
+        filters.setMinPremiereDate(libraryPreferences.get(LibraryPreferences.Companion.getFilterMinPremiereDate()));
 
         mAdapter.setRetrieveFinishedListener(new EmptyResponse(getLifecycle()) {
             @Override

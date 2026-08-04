@@ -33,7 +33,6 @@
     <string name="lbl_genres">ئۇسلۇب شەكلى</string>
     <string name="lbl_search">ئىزدەش</string>
     <string name="msg_not_implemented">" قاچىلانمىغان"</string>
-    <string name="lbl_favorites">ساقلىۋالغانلىرىم</string>
     <string name="lbl_coming_up">قويۇلۇش ئالدىدىكى</string>
     <string name="lbl_favorite_channels">ساقلاش قانىلى</string>
     <string name="lbl_other_channels">باشقا قاناللار</string>
@@ -94,7 +93,6 @@
     <string name="lbl_now_playing_track">%1$s دىكى %2$s</string>
     <string name="lbl_now_playing_album">مەنبەسى %1$s</string>
     <string name="msg_no_playable_items">قويغۇدەك تۈر يوق</string>
-    <string name="lbl_unwatched">كۆرمىگەن</string>
     <string name="btn_got_it">چۈشەندىم</string>
     <string name="lbl_programs">پروگراممىلار</string>
     <string name="lbl_prev_item">ئالدىنقىسى</string>

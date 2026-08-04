@@ -79,7 +79,6 @@
     <string name="lbl_other">Alia</string>
     <string name="lbl_movies">Filmoj</string>
     <string name="lbl_collections">Kolektoj</string>
-    <string name="lbl_favorites">Favorataj</string>
     <string name="lbl_latest">Plej novaj</string>
     <string name="lbl_search">Serĉu</string>
     <string name="lbl_genres">Ĝenroj</string>
@@ -182,7 +181,6 @@
     <string name="lbl_on">Je</string>
     <string name="lbl_tomorrow">Morgaŭ</string>
     <string name="lbl_today">Hodiaŭ</string>
-    <string name="lbl_unwatched">Nespektita</string>
     <string name="lbl_empty">Malplena</string>
     <string name="lbl_loading_elipses">Ŝarĝas…</string>
     <string name="lbl_bracket_unknown">Nekonata</string>

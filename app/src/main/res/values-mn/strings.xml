@@ -21,7 +21,6 @@
     <string name="msg_not_implemented">" хэрэгжүүлээгүй байна"</string>
     <string name="lbl_latest">Сүүлд нэмэгдсэн</string>
     <string name="lbl_by_name">Нэрээр нь</string>
-    <string name="lbl_favorites">Дуртай</string>
     <string name="lbl_coming_up">Удахгүй гарах</string>
     <string name="lbl_favorite_channels">Дуртай сувгууд</string>
     <string name="lbl_other_channels">Бусад сувгууд</string>
@@ -85,7 +84,6 @@
     <string name="lbl_add_favorite">Дуртайд нэмэх</string>
     <string name="lbl_now_playing_album">- %1$s</string>
     <string name="msg_no_playable_items">Тоглуулах боломжтой зүйл байхгүй байна</string>
-    <string name="lbl_unwatched">Саналгүй</string>
     <string name="lbl_load_channels">"Сувгуудыг уншуулах "</string>
     <string name="lbl_today">Өнөөдөр</string>
     <string name="lbl_tomorrow">Маргааш</string>

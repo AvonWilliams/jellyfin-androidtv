@@ -15,7 +15,6 @@
     <string name="lbl_tomorrow">Утре</string>
     <string name="lbl_today">Днес</string>
     <string name="lbl_load_channels">"Зареждане на канали "</string>
-    <string name="lbl_unwatched">Негледан</string>
     <string name="lbl_now_playing_album">от %1$s</string>
     <string name="lbl_now_playing_track">%1$s от %2$s</string>
     <string name="lbl_add_favorite">Добавяне на фаворит</string>
@@ -65,7 +64,6 @@
     <string name="lbl_collections">Колекции</string>
     <string name="lbl_other_channels">Други канали</string>
     <string name="lbl_favorite_channels">Любими канали</string>
-    <string name="lbl_favorites">Фаворити</string>
     <string name="lbl_by_name">По име</string>
     <string name="lbl_latest">Последно добавени</string>
     <string name="lbl_search">Търсене</string>

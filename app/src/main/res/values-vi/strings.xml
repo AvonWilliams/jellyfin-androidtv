@@ -7,7 +7,6 @@
     <string name="lbl_tomorrow">Ngày mai</string>
     <string name="lbl_today">Hôm nay</string>
     <string name="lbl_load_channels">"Tải các kênh "</string>
-    <string name="lbl_unwatched">Chưa Được Xem</string>
     <string name="msg_no_playable_items">Không có mục nào có thể phát</string>
     <string name="lbl_now_playing_album">từ %1$s</string>
     <string name="lbl_now_playing_track">%1$s của %2$s</string>
@@ -75,7 +74,6 @@
     <string name="lbl_other_channels">Kênh khác</string>
     <string name="lbl_favorite_channels">Kênh ưa thích</string>
     <string name="lbl_coming_up">Sắp chiếu</string>
-    <string name="lbl_favorites">Yêu thích</string>
     <string name="lbl_by_name">Theo tên</string>
     <string name="lbl_latest">Đã thêm gần đây</string>
     <string name="msg_not_implemented">" không được thực hiện"</string>

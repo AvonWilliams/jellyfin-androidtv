@@ -19,7 +19,6 @@
     <string name="msg_not_implemented">" není implementováno"</string>
     <string name="lbl_latest">Nedávno přidané</string>
     <string name="lbl_by_name">Podle názvu</string>
-    <string name="lbl_favorites">Oblíbené</string>
     <string name="lbl_coming_up">Právě vychází</string>
     <string name="lbl_favorite_channels">Oblíbené kanály</string>
     <string name="lbl_other_channels">Další kanály</string>
@@ -84,7 +83,6 @@
     <string name="lbl_remove_favorite">Odebrat z oblíbených</string>
     <string name="lbl_add_favorite">Přidat k oblíbeným</string>
     <string name="msg_no_playable_items">Žádné přehratelné položky</string>
-    <string name="lbl_unwatched">Nezhlédnuto</string>
     <string name="lbl_load_channels">"Načíst kanály "</string>
     <string name="lbl_today">Dnes</string>
     <string name="lbl_tomorrow">Zítra</string>

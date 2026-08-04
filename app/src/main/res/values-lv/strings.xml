@@ -92,7 +92,6 @@
     <string name="lbl_tomorrow">Rīt</string>
     <string name="lbl_today">Šodien</string>
     <string name="lbl_load_channels">"Ielādēt kanālus "</string>
-    <string name="lbl_unwatched">Neskatīts</string>
     <string name="msg_no_playable_items">Nav atskaņojamu vienumu</string>
     <string name="lbl_now_playing_album">no %1$s</string>
     <string name="lbl_now_playing_track">%1$s no %2$s</string>
@@ -150,7 +149,6 @@
     <string name="lbl_movies">Filmas</string>
     <string name="lbl_collections">Kolekcijas</string>
     <string name="lbl_coming_up">Tālāk</string>
-    <string name="lbl_favorites">Favorīti</string>
     <string name="lbl_by_name">Pēc nosaukuma</string>
     <string name="lbl_latest">Jaunākais</string>
     <string name="msg_not_implemented">" nav ieviests"</string>

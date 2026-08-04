@@ -93,7 +93,6 @@
     <string name="lbl_tomorrow">Besok</string>
     <string name="lbl_today">Hari Ini</string>
     <string name="lbl_load_channels">"Muat saluran "</string>
-    <string name="lbl_unwatched">Belum ditonton</string>
     <string name="msg_no_playable_items">Tidak ada item yang bisa diputar</string>
     <string name="lbl_now_playing_album">dari %1$s</string>
     <string name="lbl_now_playing_track">%1$s dari %2$s</string>
@@ -182,7 +181,6 @@
     <string name="lbl_other_channels">Saluran lain</string>
     <string name="lbl_favorite_channels">Saluran favorit</string>
     <string name="lbl_coming_up">Berikutnya</string>
-    <string name="lbl_favorites">Favorit</string>
     <string name="lbl_by_name">Berdasarkan nama</string>
     <string name="lbl_latest">Baru ditambahkan</string>
     <string name="msg_not_implemented">" tidak diimplementasikan"</string>

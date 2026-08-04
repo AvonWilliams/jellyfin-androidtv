@@ -69,6 +69,20 @@ class BrowseModesFragment : VerticalGridSupportFragment() {
 			definition.destination == BrowseModeDestination.DISCOVER ->
 				navigationRepository.navigate(Destinations.discover(folder, definition.mode.key))
 
+			definition.destination == BrowseModeDestination.TAG_PICKER -> {
+				if (USE_TAG_RIBBON_SHELVES) {
+					navigationRepository.navigate(Destinations.tagBrowseRows(folder, definition.mode.key))
+				} else {
+					navigationRepository.navigate(Destinations.tagPicker(folder, definition.mode.key))
+				}
+			}
+
+			definition.destination == BrowseModeDestination.DECADES_PICKER ->
+				navigationRepository.navigate(Destinations.decadesPicker(folder))
+
+			definition.destination == BrowseModeDestination.AGE_RATING_PICKER ->
+				navigationRepository.navigate(Destinations.ageRatingPicker(folder))
+
 			definition.preset == null ->
 				navigationRepository.navigate(Destinations.libraryBrowser(folder))
 
@@ -96,6 +110,8 @@ class BrowseModesFragment : VerticalGridSupportFragment() {
 		preset.sortOrder?.let { preferences[LibraryPreferences.sortOrder] = it }
 		preferences[LibraryPreferences.filterUnwatchedOnly] = preset.unwatchedOnly
 		preferences[LibraryPreferences.filterFavoritesOnly] = preset.favoritesOnly
+		preset.minDateLastSaved?.let { preferences[LibraryPreferences.filterMinDateLastSaved] = it }
+		preset.minPremiereDate?.let { preferences[LibraryPreferences.filterMinPremiereDate] = it }
 		preferences.commit()
 	}
 }

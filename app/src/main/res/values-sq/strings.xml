@@ -50,7 +50,6 @@
     <string name="lbl_seasons">Sezonet</string>
     <string name="lbl_latest_in">Shtuar së fundi në %1$s</string>
     <string name="lbl_by_name">Sipas emrit</string>
-    <string name="lbl_favorites">Të preferuarat</string>
     <string name="lbl_coming_up">Së shpejti</string>
     <string name="lbl_favorite_channels">Kanalet e preferuara</string>
     <string name="lbl_collections">Koleksionet</string>
@@ -100,7 +99,6 @@
     <string name="lbl_mark_unplayed">Shëno si i paparë</string>
     <string name="lbl_mark_played">Shëno si i parë</string>
     <string name="lbl_search_hint">kërko tekst (zgjidh për tastier)</string>
-    <string name="lbl_unwatched">Të paparat</string>
     <string name="lbl_similar_items_library">Objekt i ngjashëm në librarin tuaj</string>
     <string name="lbl_record_any_channel">Rregjistro në çdo kanal</string>
     <string name="lbl_add_favorite">Shto të preferuarën</string>

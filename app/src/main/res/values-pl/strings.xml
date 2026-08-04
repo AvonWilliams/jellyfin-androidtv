@@ -46,7 +46,6 @@
     <string name="lbl_collections">Kolekcje</string>
     <string name="lbl_other_channels">Inne kanały</string>
     <string name="lbl_favorite_channels">Ulubione kanały</string>
-    <string name="lbl_favorites">Ulubione</string>
     <string name="lbl_by_name">Według nazwy</string>
     <string name="lbl_latest">Ostatnio dodane</string>
     <string name="lbl_search">Szukaj</string>
@@ -128,7 +127,6 @@
     <string name="lbl_tomorrow">Jutro</string>
     <string name="lbl_today">Dziś</string>
     <string name="lbl_load_channels">"Wczytaj kanały "</string>
-    <string name="lbl_unwatched">Nieobejrzane</string>
     <string name="msg_no_playable_items">Brak elementów do odtworzenia</string>
     <string name="lbl_runs">Trwa</string>
     <string name="lbl_delete">Usuń</string>

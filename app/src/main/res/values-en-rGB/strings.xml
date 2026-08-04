@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="lbl_favorites">Favourites</string>
     <string name="lbl_favorite_channels">Favourite channels</string>
     <string name="lbl_remove_favorite">Remove favourite</string>
     <string name="lbl_add_favorite">Add favourite</string>
@@ -70,7 +69,6 @@
     <string name="lbl_tomorrow">Tomorrow</string>
     <string name="lbl_today">Today</string>
     <string name="lbl_load_channels">"Load channels "</string>
-    <string name="lbl_unwatched">Unwatched</string>
     <string name="msg_no_playable_items">No playable items</string>
     <string name="lbl_now_playing_album">from %1$s</string>
     <string name="lbl_mark_played">Mark played</string>

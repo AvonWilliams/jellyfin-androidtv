@@ -51,7 +51,6 @@
     <string name="lbl_collections">Συλλογές</string>
     <string name="lbl_other_channels">Άλλα Κανάλια</string>
     <string name="lbl_favorite_channels">Αγαπημένα Κανάλια</string>
-    <string name="lbl_favorites">Αγαπημένα</string>
     <string name="lbl_by_name">Ονοματικά</string>
     <string name="lbl_latest">Προστέθηκαν πρόσφατα</string>
     <string name="lbl_search">Αναζήτηση</string>
@@ -170,7 +169,6 @@
     <string name="pref_about_title">Περί</string>
     <string name="pref_theme_dark">Σκοτεινό (Προεπιλογή)</string>
     <string name="lbl_my_media">Τα πολυμέσα μου</string>
-    <string name="lbl_unwatched">Δεν προβλήθηκε</string>
     <string name="lbl_song_title">Τίτλος τραγουδιού</string>
     <string name="lbl_album_name">Όνομα φακέλου</string>
     <string name="lbl_next_episode">Επόμενο Επεισόδιο</string>

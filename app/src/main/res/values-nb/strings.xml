@@ -19,7 +19,6 @@
     <string name="msg_not_implemented">" ikke implementert"</string>
     <string name="lbl_latest">Nylig lagt til</string>
     <string name="lbl_by_name">Etter navn</string>
-    <string name="lbl_favorites">Favoritter</string>
     <string name="lbl_coming_up">Neste</string>
     <string name="lbl_favorite_channels">Favorittkanaler</string>
     <string name="lbl_other_channels">Andre kanaler</string>
@@ -84,7 +83,6 @@
     <string name="lbl_remove_favorite">Fjern favoritt</string>
     <string name="lbl_add_favorite">Legg til favoritt</string>
     <string name="msg_no_playable_items">Ingen spillbare elementer</string>
-    <string name="lbl_unwatched">Usett</string>
     <string name="lbl_series">Serier</string>
     <string name="lbl_load_channels">"Last kanaler "</string>
     <string name="lbl_today">I dag</string>

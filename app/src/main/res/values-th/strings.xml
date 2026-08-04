@@ -47,7 +47,6 @@
     <string name="lbl_other_channels">ช่องอื่นๆ</string>
     <string name="lbl_favorite_channels">ช่องโปรด</string>
     <string name="lbl_coming_up">ที่กำลังจะมา</string>
-    <string name="lbl_favorites">รายการโปรด</string>
     <string name="lbl_by_name">โดยชื่อ</string>
     <string name="lbl_latest">ล่าสุด</string>
     <string name="lbl_search">ค้นหา</string>
@@ -136,7 +135,6 @@
     <string name="lbl_series_settings">การตั้งค่าซีรีส์</string>
     <string name="lbl_additional_parts">ส่วนอื่น ๆ ที่เกี่ยวข้อง</string>
     <string name="msg_no_playable_items">ไม่มีรายการที่เล่นได้</string>
-    <string name="lbl_unwatched">ยังไม่ได้รับชม</string>
     <string name="lbl_today">วันนี้</string>
     <string name="lbl_tomorrow">พรุ่งนี้</string>
     <string name="lbl_on">บน</string>

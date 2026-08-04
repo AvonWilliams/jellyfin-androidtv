@@ -66,7 +66,6 @@
     <string name="lbl_other_channels">Alte canale</string>
     <string name="lbl_favorite_channels">Canale favorite</string>
     <string name="lbl_coming_up">Urmează</string>
-    <string name="lbl_favorites">Favorite</string>
     <string name="lbl_by_name">După nume</string>
     <string name="lbl_latest">Adăugate recent</string>
     <string name="msg_not_implemented">" neimplementat"</string>
@@ -189,7 +188,6 @@
     <string name="lbl_tomorrow">Mâine</string>
     <string name="lbl_today">Astăzi</string>
     <string name="lbl_load_channels">"Încărcați canalele "</string>
-    <string name="lbl_unwatched">Nevizionat</string>
     <string name="msg_no_playable_items">Nu există articole redabile</string>
     <string name="lbl_now_playing_album">de la %1$s</string>
     <string name="lbl_now_playing_track">%1$s a %2$s</string>

@@ -40,7 +40,6 @@
     <string name="lbl_other_channels">کانال‌های دیگر</string>
     <string name="lbl_favorite_channels">کانال‌های مورد علاقه</string>
     <string name="lbl_coming_up">در ادامه</string>
-    <string name="lbl_favorites">مورد علاقه ها</string>
     <string name="lbl_by_name">بر اساس نام</string>
     <string name="lbl_latest">تازه‌ترین</string>
     <string name="msg_not_implemented">" اجرا نشده"</string>
@@ -110,7 +109,6 @@
     <string name="lbl_tomorrow">فردا</string>
     <string name="lbl_today">امروز</string>
     <string name="lbl_load_channels">"بارگزاری کانال ها "</string>
-    <string name="lbl_unwatched">تماشا نشده</string>
     <string name="msg_no_playable_items">هیچ موردی برای نمایش وجود ندارد</string>
     <string name="msg_item_added">" مورد اضافه شد"</string>
     <string name="lbl_delete">حذف</string>

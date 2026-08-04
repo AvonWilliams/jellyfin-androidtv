@@ -12,9 +12,16 @@ import org.jellyfin.androidtv.ui.browsing.CollectionFragment
 import org.jellyfin.androidtv.ui.browsing.GenericFolderFragment
 import org.jellyfin.androidtv.ui.browsing.SuggestedMoviesFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.BrowseModesFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.AgeRatingItemsFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.AgeRatingPickerFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.ByStudioFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.DecadesItemsFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.DecadesPickerFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.DiscoverFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.StudioItemsFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.TagBrowseRowsFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.TagItemsFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.TagPickerFragment
 import org.jellyfin.androidtv.ui.home.HomeFragment
 import org.jellyfin.androidtv.ui.itemdetail.FullDetailsFragment
 import org.jellyfin.androidtv.ui.itemdetail.ItemListFragment
@@ -82,6 +89,53 @@ object Destinations {
 		fragmentDestination<StudioItemsFragment>(
 			Extras.Folder to Json.Default.encodeToString(item),
 			Extras.Studio to studio,
+		)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun tagPicker(item: BaseItemDto, browseMode: String) = fragmentDestination<TagPickerFragment>(
+		Extras.Folder to Json.Default.encodeToString(item),
+		Extras.BrowseMode to browseMode,
+	)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun libraryByTagItems(item: BaseItemDto, tag: String, includeType: String) =
+		fragmentDestination<TagItemsFragment>(
+			Extras.Folder to Json.Default.encodeToString(item),
+			Extras.Tag to tag,
+			Extras.IncludeType to includeType,
+		)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun decadesPicker(item: BaseItemDto) = fragmentDestination<DecadesPickerFragment>(
+		Extras.Folder to Json.Default.encodeToString(item),
+	)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun libraryByDecadeItems(item: BaseItemDto, decadeStart: Int, includeType: String) =
+		fragmentDestination<DecadesItemsFragment>(
+			Extras.Folder to Json.Default.encodeToString(item),
+			Extras.Tag to decadeStart.toString(),
+			Extras.IncludeType to includeType,
+		)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun ageRatingPicker(item: BaseItemDto) = fragmentDestination<AgeRatingPickerFragment>(
+		Extras.Folder to Json.Default.encodeToString(item),
+	)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun libraryByAgeRatingItems(item: BaseItemDto, rating: String, includeType: String) =
+		fragmentDestination<AgeRatingItemsFragment>(
+			Extras.Folder to Json.Default.encodeToString(item),
+			Extras.Tag to rating,
+			Extras.IncludeType to includeType,
+		)
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun tagBrowseRows(item: BaseItemDto, browseMode: String) =
+		fragmentDestination<TagBrowseRowsFragment>(
+			Extras.Folder to Json.Default.encodeToString(item),
+			Extras.BrowseMode to browseMode,
 		)
 
 	// TODO only pass item id instead of complete JSON to browsing destinations

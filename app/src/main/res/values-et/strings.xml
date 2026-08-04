@@ -13,7 +13,6 @@
     <string name="lbl_other_channels">Muud kanalid</string>
     <string name="lbl_favorite_channels">Lemmikud kanalid</string>
     <string name="lbl_coming_up">Tulekul</string>
-    <string name="lbl_favorites">Lemmikud</string>
     <string name="lbl_by_name">Nime järgi</string>
     <string name="lbl_latest">Hiljuti lisatud</string>
     <string name="msg_not_implemented">" ei ole rakendatud"</string>
@@ -124,7 +123,6 @@
     <string name="msg_playback_restricted">Administraator on keelanud selle taasesituse hetkel</string>
     <string name="lbl_never">Mitte kunagi</string>
     <string name="lbl_tv_queuing">Mängi järgmine osa automaatselt</string>
-    <string name="lbl_unwatched">Vaatamata</string>
     <string name="lbl_tomorrow">Homme</string>
     <string name="lbl_record_any_time">Salvestage igal ajal</string>
     <string name="lbl_song">Lugu</string>

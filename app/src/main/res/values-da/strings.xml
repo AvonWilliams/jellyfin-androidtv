@@ -19,7 +19,6 @@
     <string name="msg_not_implemented">" ikke implementeret"</string>
     <string name="lbl_latest">Senest tilføjede</string>
     <string name="lbl_by_name">Efter navn</string>
-    <string name="lbl_favorites">Favoritter</string>
     <string name="lbl_coming_up">Næste</string>
     <string name="lbl_favorite_channels">Favoritkanaler</string>
     <string name="lbl_other_channels">Andre kanaler</string>
@@ -82,7 +81,6 @@
     <string name="lbl_remove_favorite">Fjern favorit</string>
     <string name="lbl_add_favorite">Tilføj favorit</string>
     <string name="msg_no_playable_items">Ingen filer der kan afspilles</string>
-    <string name="lbl_unwatched">Ikke afspillet</string>
     <string name="lbl_load_channels">"Indlæs kanaler "</string>
     <string name="lbl_today">I dag</string>
     <string name="lbl_tomorrow">I morgen</string>

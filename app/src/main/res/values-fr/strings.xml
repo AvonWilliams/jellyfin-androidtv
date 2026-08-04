@@ -19,7 +19,6 @@
     <string name="msg_not_implemented">" non implémentés"</string>
     <string name="lbl_latest">Récemment ajouté</string>
     <string name="lbl_by_name">Par nom</string>
-    <string name="lbl_favorites">Favoris</string>
     <string name="lbl_coming_up">À venir</string>
     <string name="lbl_favorite_channels">Chaînes favorites</string>
     <string name="lbl_other_channels">Autres chaînes</string>
@@ -84,7 +83,6 @@
     <string name="lbl_remove_favorite">Supprimer des favoris</string>
     <string name="lbl_add_favorite">Ajouter aux favoris</string>
     <string name="msg_no_playable_items">Aucun élément à lire</string>
-    <string name="lbl_unwatched">Non lu</string>
     <string name="lbl_load_channels">"Charger les chaînes "</string>
     <string name="lbl_today">Aujourd\'hui</string>
     <string name="lbl_tomorrow">Demain</string>
