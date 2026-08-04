@@ -95,8 +95,13 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 			// Build a synthetic item so the grid card presenter has something to render.
 			// CardPresenter shows item.name as the label.
 			// Build safely through kotlinx.serialization to avoid JSON injection
-			// when tag names contain quotes or backslashes.
-			val json = buildJsonObject { put("Name", tagName) }.toString()
+			// when tag names contain quotes or backslashes. Name, Id, and Type
+			// are required fields on BaseItemDto — Id must be a UUID string.
+			val json = buildJsonObject {
+				put("Name", tagName)
+				put("Id", java.util.UUID.randomUUID().toString())
+				put("Type", "Folder")
+			}.toString()
 			val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
 			tagsAdapter.add(BaseItemDtoBaseRowItem(syntheticItem))
 		}

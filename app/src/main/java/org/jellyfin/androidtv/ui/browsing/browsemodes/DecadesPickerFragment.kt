@@ -93,10 +93,15 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 		if (!isAdded) return@launch
 
 		decades.forEach { decadeStart ->
-		val label = "${decadeStart}s"
-		// Build safely through kotlinx.serialization to avoid JSON injection.
-		val json = buildJsonObject { put("Name", label) }.toString()
-		val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
+			val label = "${decadeStart}s"
+			// Build safely through kotlinx.serialization. Name, Id and Type
+			// are required fields on BaseItemDto.
+			val json = buildJsonObject {
+				put("Name", label)
+				put("Id", java.util.UUID.randomUUID().toString())
+				put("Type", "Folder")
+			}.toString()
+			val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
 			decadesAdapter.add(BaseItemDtoBaseRowItem(syntheticItem))
 		}
 	}

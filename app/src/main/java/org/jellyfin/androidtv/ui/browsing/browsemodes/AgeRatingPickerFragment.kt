@@ -90,10 +90,15 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 		if (!isAdded) return@launch
 
 		ratings.forEach { rating ->
-			// Build safely through kotlinx.serialization to avoid JSON injection.
-		val json = buildJsonObject { put("Name", rating) }.toString()
-		val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
-		ratingsAdapter.add(BaseItemDtoBaseRowItem(syntheticItem))
+			// Build safely through kotlinx.serialization. Name, Id and Type
+			// are required fields on BaseItemDto.
+			val json = buildJsonObject {
+				put("Name", rating)
+				put("Id", java.util.UUID.randomUUID().toString())
+				put("Type", "Folder")
+			}.toString()
+			val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
+			ratingsAdapter.add(BaseItemDtoBaseRowItem(syntheticItem))
 		}
 	}
 
