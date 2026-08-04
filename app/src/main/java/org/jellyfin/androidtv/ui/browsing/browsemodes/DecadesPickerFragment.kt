@@ -9,6 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
@@ -91,9 +93,10 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 		if (!isAdded) return@launch
 
 		decades.forEach { decadeStart ->
-			val label = "${decadeStart}s"
-			// BaseItemDto has no Kotlin-level defaults — use JSON to build a synthetic item.
-			val syntheticItem = Json.decodeFromString<BaseItemDto>("""{"Name":"$label"}""")
+		val label = "${decadeStart}s"
+		// Build safely through kotlinx.serialization to avoid JSON injection.
+		val json = buildJsonObject { put("Name", label) }.toString()
+		val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
 			decadesAdapter.add(BaseItemDtoBaseRowItem(syntheticItem))
 		}
 	}

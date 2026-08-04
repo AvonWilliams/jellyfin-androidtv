@@ -149,17 +149,8 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 		)
 		val available = response.content.tags.orEmpty()
 
-		val curatedSet = curatedTagsForRibbonShelves(mode).toSet()
+		val curatedSet = curatedTagsFor(mode).toSet()
 		return available.filter { curatedSet.contains(it) }.sorted()
 	}
 }
 
-/** Maps a browse mode to its curated tag list. Duplicate of [curatedTagsFor] for clarity. */
-private fun curatedTagsForRibbonShelves(mode: BrowseMode): List<String> = when (mode) {
-	BrowseMode.MOOD -> MOOD_TAGS
-	BrowseMode.STORY_THEMES -> STORY_THEME_TAGS
-	BrowseMode.PLOT_ELEMENTS -> PLOT_ELEMENT_TAGS
-	BrowseMode.WORLDS -> WORLD_TAGS
-	BrowseMode.STYLES -> STYLE_TAGS
-	else -> emptyList()
-}

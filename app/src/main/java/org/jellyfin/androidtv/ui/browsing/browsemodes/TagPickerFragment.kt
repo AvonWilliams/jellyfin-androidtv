@@ -9,6 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
@@ -92,8 +94,10 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		tags.forEach { tagName ->
 			// Build a synthetic item so the grid card presenter has something to render.
 			// CardPresenter shows item.name as the label.
-			// BaseItemDto has no Kotlin-level defaults — use JSON to build a synthetic item.
-			val syntheticItem = Json.decodeFromString<BaseItemDto>("""{"Name":"$tagName"}""")
+			// Build safely through kotlinx.serialization to avoid JSON injection
+			// when tag names contain quotes or backslashes.
+			val json = buildJsonObject { put("Name", tagName) }.toString()
+			val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
 			tagsAdapter.add(BaseItemDtoBaseRowItem(syntheticItem))
 		}
 	}
@@ -119,8 +123,8 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	}
 }
 
-/** Maps a browse mode to its curated tag list. */
-private fun curatedTagsFor(mode: BrowseMode): List<String> = when (mode) {
+/** Maps a browse mode to its curated tag list. Internal — shared with TagBrowseRowsFragment. */
+internal fun curatedTagsFor(mode: BrowseMode): List<String> = when (mode) {
 	BrowseMode.MOOD -> MOOD_TAGS
 	BrowseMode.STORY_THEMES -> STORY_THEME_TAGS
 	BrowseMode.PLOT_ELEMENTS -> PLOT_ELEMENT_TAGS
