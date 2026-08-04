@@ -101,11 +101,11 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 
 			if (baseItem.originalTitle == "__sort__") {
 				sortMode = sortMode.next()
-				if (sortMode.needsCounts && ratingCounts.isEmpty()) {
-					lifecycleScope.launch { fetchRatingCounts(); refreshGrid() }
-				} else {
-					refreshGrid()
-				}
+				refreshGrid()
+				return@OnItemViewClickedListener
+			}
+			if (baseItem.originalTitle == "__reshuffle__") {
+				refreshGrid()
 				return@OnItemViewClickedListener
 			}
 
@@ -130,6 +130,7 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 
 		rawRatings = ratings
 		refreshGrid()
+		launch { withContext(Dispatchers.IO) { fetchRatingCounts() } }
 	}
 
 	private fun refreshGrid() {
@@ -143,12 +144,20 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 		}.toString()
 		ratingsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson)))
 
+		if (sortMode == SortMode.RANDOM) {
+			val shuffleJson = buildJsonObject {
+				put("Name", " ↻ Reshuffle")
+				put("OriginalTitle", "__reshuffle__")
+				put("Id", java.util.UUID.randomUUID().toString())
+				put("Type", "Folder")
+			}.toString()
+			ratingsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(shuffleJson)))
+		}
+
 		val sorted = when (sortMode) {
-			SortMode.RANDOM -> rawRatings.shuffled()
+			SortMode.RANDOM -> interleavedShuffle(rawRatings, ratingCounts)
 			SortMode.A_Z -> rawRatings.sorted()
 			SortMode.Z_A -> rawRatings.sortedDescending()
-			SortMode.MOST_ITEMS -> rawRatings.sortedByDescending { ratingCounts[it] ?: 0 }
-			SortMode.FEWEST_ITEMS -> rawRatings.sortedBy { ratingCounts[it] ?: 0 }
 		}
 
 		sorted.forEach { rating ->

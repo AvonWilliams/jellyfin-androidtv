@@ -80,13 +80,11 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
 			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem
-			if (baseItem?.originalTitle == "__sort__") {
+		if (baseItem?.originalTitle == "__sort__") {
 				sortMode = sortMode.next()
-				if (sortMode.needsCounts && tagCounts.isEmpty()) {
-					lifecycleScope.launch { fetchTagCounts(); refreshRows() }
-				} else {
-					refreshRows()
-				}
+				refreshRows()
+			} else if (baseItem?.originalTitle == "__reshuffle__") {
+				refreshRows()
 			} else if (item is BaseRowItem) {
 				itemLauncher.launch(item, null, requireContext())
 			}
@@ -107,6 +105,7 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 
 		rawTags = tags
 		refreshRows()
+		launch { withContext(Dispatchers.IO) { fetchTagCounts() } }
 	}
 
 	private fun refreshRows() {
@@ -120,6 +119,7 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			put("Type", "Folder")
 		}.toString()
 		val sortItem = BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson))
+		// Sort + optional reshuffle row
 		val sortRowAdapter = ArrayObjectAdapter(object : Presenter() {
 			override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
 				val tv = TextView(parent.context).apply {
@@ -138,14 +138,21 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			override fun onUnbindViewHolder(vh: Presenter.ViewHolder) {}
 		})
 		sortRowAdapter.add(sortItem)
+		if (sortMode == SortMode.RANDOM) {
+			val shuffleJson = buildJsonObject {
+				put("Name", " ↻ Reshuffle")
+				put("OriginalTitle", "__reshuffle__")
+				put("Id", java.util.UUID.randomUUID().toString())
+				put("Type", "Folder")
+			}.toString()
+			sortRowAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(shuffleJson)))
+		}
 		rowsAdapter.add(ListRow(HeaderItem(""), sortRowAdapter))
 
 		val sorted = when (sortMode) {
-			SortMode.RANDOM -> rawTags.shuffled()
+			SortMode.RANDOM -> interleavedShuffle(rawTags, tagCounts)
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()
-			SortMode.MOST_ITEMS -> rawTags.sortedByDescending { tagCounts[it] ?: 0 }
-			SortMode.FEWEST_ITEMS -> rawTags.sortedBy { tagCounts[it] ?: 0 }
 		}
 
 		val cardPresenter = CardPresenter(false, CARD_HEIGHT)
