@@ -1,10 +1,8 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
 import android.os.Bundle
-import android.view.View
 import androidx.leanback.app.VerticalGridSupportFragment
 import androidx.leanback.widget.OnItemViewClickedListener
-import androidx.leanback.widget.TitleView
 import androidx.leanback.widget.VerticalGridPresenter
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +43,6 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var tagsAdapter: MutableObjectAdapter<Any>
 	private var sortMode = SortMode.A_Z
 	private var rawTags: List<String> = emptyList()
-	private var baseTitle: String = ""
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -58,9 +55,8 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		baseTitle = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
-			?.let { getString(it) } ?: mode.key
-		updateTitle()
+		val label = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
+		title = label?.let { getString(it) } ?: mode.key
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
@@ -69,6 +65,15 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
 			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
+
+			// Sort button
+			if (baseItem.originalTitle == "__sort__") {
+				sortMode = sortMode.next()
+				refreshGrid()
+				return@OnItemViewClickedListener
+			}
+
+			// Tag tile — use originalTitle (raw tag) for filtering
 			val tag = baseItem.originalTitle ?: baseItem.name ?: return@OnItemViewClickedListener
 			navigationRepository.navigate(
 				Destinations.libraryByTagItems(folder, tag, itemType.serialName)
@@ -76,20 +81,6 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		}
 
 		load()
-	}
-
-	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-		super.onViewCreated(view, savedInstanceState)
-		// Make the header title clickable to cycle sort mode.
-		findTitleView(view)?.setOnClickListener {
-			sortMode = sortMode.next()
-			updateTitle()
-			refreshGrid()
-		}
-	}
-
-	private fun updateTitle() {
-		title = "$baseTitle · ${sortMode.label}"
 	}
 
 	private fun load() = lifecycleScope.launch {
@@ -108,6 +99,15 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 
 	private fun refreshGrid() {
 		tagsAdapter.clear()
+
+		// Sort toggle tile
+		val sortJson = buildJsonObject {
+			put("Name", " Sort: ${sortMode.label}")
+			put("OriginalTitle", "__sort__")
+			put("Id", java.util.UUID.randomUUID().toString())
+			put("Type", "Folder")
+		}.toString()
+		tagsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson)))
 
 		val sorted = when (sortMode) {
 			SortMode.A_Z -> rawTags.sorted()
@@ -142,18 +142,6 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		val curatedSet = curatedTagsFor(mode).toSet()
 		return available.filter { curatedSet.contains(it) }.sorted()
 	}
-}
-
-/** Find the Leanback [TitleView] in the fragment's view hierarchy. */
-internal fun findTitleView(root: View): TitleView? {
-	if (root is TitleView) return root
-	if (root is android.view.ViewGroup) {
-		for (i in 0 until root.childCount) {
-			val found = findTitleView(root.getChildAt(i))
-			if (found != null) return found
-		}
-	}
-	return null
 }
 
 enum class SortMode(val label: String) {
