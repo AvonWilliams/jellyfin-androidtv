@@ -63,7 +63,7 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
-		val sortPresenter = CardPresenter(true, 80)
+		val sortPresenter = CardPresenter(true, 48)
 		val ratingPresenter = CardPresenter(true, CARD_HEIGHT)
 		ratingsAdapter = MutableObjectAdapter(object : PresenterSelector() {
 			override fun getPresenter(item: Any?): Presenter {

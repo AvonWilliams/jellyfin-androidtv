@@ -110,7 +110,7 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			put("Type", "Folder")
 		}.toString()
 		val sortItem = BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson))
-		val sortRowAdapter = ArrayObjectAdapter(CardPresenter(true, 80))
+		val sortRowAdapter = ArrayObjectAdapter(CardPresenter(true, 48))
 		sortRowAdapter.add(sortItem)
 		rowsAdapter.add(ListRow(HeaderItem(""), sortRowAdapter))
 

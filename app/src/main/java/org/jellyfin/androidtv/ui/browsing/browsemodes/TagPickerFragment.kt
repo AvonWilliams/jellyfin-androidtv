@@ -62,7 +62,7 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
-		val sortPresenter = CardPresenter(true, 80)
+		val sortPresenter = CardPresenter(true, 48)
 		val tagPresenter = CardPresenter(true, CARD_HEIGHT)
 		tagsAdapter = MutableObjectAdapter(object : PresenterSelector() {
 			override fun getPresenter(item: Any?): Presenter {
