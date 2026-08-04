@@ -35,6 +35,19 @@ branch. Everything else is stock Jellyfin Android TV.
 **1. Download** `jellyfin-androidtv-browse-modes-*.apk` from the
 [Browse Modes releases](https://github.com/AvonWilliams/jellyfin-browse-modes/releases).
 
+Or use the Downloder app by AFTVnews. and enter any of the following:
+...
+8953482
+...
+or
+...
+http://aftv.news/8953482
+...
+or
+...
+avonwilliams.github.io/jellyfin-browse-modes/tv
+...
+
 **2. Enable network debugging on the TV.** Settings → Device Preferences → About, click **Build**
 seven times, then Settings → Device Preferences → Developer options → **Network debugging**.
 Note the TV's IP from Settings → Network & Internet.
