@@ -5,6 +5,7 @@ import androidx.leanback.app.RowsSupportFragment
 import androidx.leanback.widget.ArrayObjectAdapter
 import androidx.leanback.widget.HeaderItem
 import androidx.leanback.widget.ListRow
+import androidx.leanback.widget.OnItemViewClickedListener
 import androidx.leanback.widget.Presenter
 import androidx.leanback.widget.Row
 import androidx.lifecycle.lifecycleScope
@@ -12,9 +13,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.data.repository.ItemRepository
+import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
+import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
+import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
 import org.jellyfin.androidtv.ui.itemhandling.ItemRowAdapter
 import org.jellyfin.androidtv.ui.presentation.CardPresenter
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
@@ -31,43 +37,23 @@ import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-/**
- * Stacked horizontal poster shelves for tag-based browse modes (Mood, Story Themes, etc.)
- *
- * Each curated tag that has matching items in the library gets one horizontal row of poster cards.
- * This mirrors the web client's tag ribbon shelves and is gated behind [USE_TAG_RIBBON_SHELVES].
- *
- * **Reversibility:** Set `USE_TAG_RIBBON_SHELVES = false` in [BrowseModes.kt] to revert to the
- * flat picker grid ([TagPickerFragment]) instead. Both paths are fully wired and independent.
- *
- * Pattern follows [BrowseViewFragment] row construction with [ItemRowAdapter].
- *
- * ## Known areas needing on-TV verification
- *
- * - Row density: with many tags, vertical scrolling may feel long. Consider capping at ~20 rows.
- * - Card sizing: [CARD_HEIGHT] = 260 (poster). May need adjustment for TV readability.
- * - Sort: currently random-per-row. Add sort/shuffle header controls later.
- * - Lazy loading: [ItemRowAdapter.Retrieve] fires immediately per-row. For large tag sets
- *   (~50+ rows), consider deferring loads until rows scroll into view.
- * - Tag name length: long tag names may truncate in [HeaderItem]. The web uses sentence-case;
- *   we pass raw TMDb tag names for now.
- */
 class TagBrowseRowsFragment : RowsSupportFragment() {
 	private companion object {
-		/** Maximum tags to show as rows to avoid overwhelming the UI. */
 		const val MAX_ROWS = 30
-		/** Items loaded per tag row. */
 		const val CHUNK_SIZE = 50
 		const val CARD_HEIGHT = 260
 	}
 
 	private val apiClient by inject<ApiClient>()
 	private val userRepository by inject<UserRepository>()
+	private val itemLauncher by inject<ItemLauncher>()
 
 	private lateinit var folder: BaseItemDto
 	private lateinit var mode: BrowseMode
 	private lateinit var itemType: BaseItemKind
 	private lateinit var rowsAdapter: MutableObjectAdapter<Row>
+	private var sortMode = SortMode.A_Z
+	private var rawTags: List<String> = emptyList()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -81,12 +67,21 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 		}
 
 		val label = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
-		// RowsSupportFragment doesn't have a title property — set the activity title instead.
 		val titleText = label?.let { getString(it) } ?: mode.key
 		requireActivity().title = titleText
 
 		rowsAdapter = MutableObjectAdapter(PositionableListRowPresenter())
 		adapter = rowsAdapter
+
+		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
+			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
+			if (baseItem.originalTitle == "__sort_button__") {
+				sortMode = sortMode.next()
+				refreshRows()
+			} else if (item is BaseRowItem) {
+				itemLauncher.launch(item, null, requireContext())
+			}
+		}
 
 		load()
 	}
@@ -101,9 +96,38 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 
 		if (!isAdded) return@launch
 
+		rawTags = tags
+		refreshRows()
+	}
+
+	/** Rebuilds all rows with the current [sortMode], sort button first. */
+	private fun refreshRows() {
+		rowsAdapter.clear()
+
+		// Sort button row — single tile that cycles sort mode on click.
+		val sortButtonJson = buildJsonObject {
+			put("Name", "Sort: ${sortMode.label}")
+			put("OriginalTitle", "__sort_button__")
+			put("Id", java.util.UUID.randomUUID().toString())
+			put("Type", "Folder")
+		}.toString()
+		val sortButtonItem = BaseItemDtoBaseRowItem(
+			Json.decodeFromString<BaseItemDto>(sortButtonJson)
+		)
+		val sortRowAdapter = ArrayObjectAdapter(CardPresenter(true, CARD_HEIGHT))
+		sortRowAdapter.add(sortButtonItem)
+		rowsAdapter.add(ListRow(HeaderItem(""), sortRowAdapter))
+
+		// Sort tags by current mode
+		val sorted = when (sortMode) {
+			SortMode.A_Z -> rawTags.sorted()
+			SortMode.Z_A -> rawTags.sortedDescending()
+			SortMode.RANDOM -> rawTags.shuffled()
+		}
+
 		val cardPresenter = CardPresenter(false, CARD_HEIGHT)
 
-		tags.take(MAX_ROWS).forEach { tag ->
+		sorted.take(MAX_ROWS).forEach { tag ->
 			val query = GetItemsRequest(
 				parentId = folder.id,
 				includeItemTypes = setOf(itemType),
@@ -115,15 +139,14 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 				limit = CHUNK_SIZE,
 			)
 
-			// ItemRowAdapter handles its own async loading via Retrieve().
 			val rowAdapter = ItemRowAdapter(
 				requireContext(),
 				query,
-				CHUNK_SIZE,          // chunkSize
-				false,               // preferParentThumb
-				false,               // staticHeight
+				CHUNK_SIZE,
+				false,
+				false,
 				cardPresenter as Presenter,
-				rowsAdapter          // parent adapter
+				rowsAdapter
 			)
 			rowAdapter.Retrieve()
 
@@ -132,10 +155,6 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 		}
 	}
 
-	/**
-	 * Returns the curated tags that are actually present in this library, sorted A–Z.
-	 * Shared logic with [TagPickerFragment.fetchMatchingTags].
-	 */
 	private suspend fun fetchMatchingTags(): List<String> {
 		val userId = userRepository.currentUser.value?.id ?: return emptyList()
 
@@ -153,4 +172,3 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 		return available.filter { curatedSet.contains(it) }.sorted()
 	}
 }
-

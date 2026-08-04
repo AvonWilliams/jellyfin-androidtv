@@ -27,16 +27,11 @@ import org.jellyfin.sdk.model.api.QueryFiltersLegacy
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-/**
- * A grid of decades derived from the years present in this library.
- *
- * Fetches the available years from /Items/Filters, groups them into decades (1980s, 1990s, …),
- * and shows only decades that have at least one matching item.
- */
 class DecadesPickerFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 6
 		const val CARD_HEIGHT = 200
+		const val SORT_BUTTON_MARKER = "__sort_button__"
 	}
 
 	private val apiClient by inject<ApiClient>()
@@ -46,6 +41,8 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var folder: BaseItemDto
 	private lateinit var itemType: BaseItemKind
 	private lateinit var decadesAdapter: MutableObjectAdapter<Any>
+	private var sortMode = SortMode.A_Z
+	private var rawDecades: List<Int> = emptyList()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -69,9 +66,15 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 		adapter = decadesAdapter
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			val decadeLabel = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
-				?: return@OnItemViewClickedListener
-			// Extract the decade start year from the label (e.g. "1980s" -> 1980).
+			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
+
+			if (baseItem.originalTitle == SORT_BUTTON_MARKER) {
+				sortMode = sortMode.next()
+				refreshGrid()
+				return@OnItemViewClickedListener
+			}
+
+			val decadeLabel = baseItem.name ?: return@OnItemViewClickedListener
 			val decadeStartYear = decadeLabel.removeSuffix("s").toIntOrNull()
 				?: return@OnItemViewClickedListener
 			navigationRepository.navigate(
@@ -92,21 +95,43 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 
 		if (!isAdded) return@launch
 
-		decades.forEach { decadeStart ->
+		rawDecades = decades
+		refreshGrid()
+	}
+
+	private fun refreshGrid() {
+		decadesAdapter.clear()
+		decadesAdapter.add(makeSortButtonItem())
+
+		val sorted = when (sortMode) {
+			SortMode.A_Z -> rawDecades.sorted()
+			SortMode.Z_A -> rawDecades.sortedDescending()
+			SortMode.RANDOM -> rawDecades.shuffled()
+		}
+
+		sorted.forEach { decadeStart ->
 			val label = "${decadeStart}s"
-			// Build safely through kotlinx.serialization. Name, Id and Type
-			// are required fields on BaseItemDto.
 			val json = buildJsonObject {
 				put("Name", label)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
-			decadesAdapter.add(BaseItemDtoBaseRowItem(syntheticItem))
+			val item = Json.decodeFromString<BaseItemDto>(json)
+			decadesAdapter.add(BaseItemDtoBaseRowItem(item))
 		}
 	}
 
-	/** Fetches available years from the server and groups them into decades. */
+	private fun makeSortButtonItem(): BaseItemDtoBaseRowItem {
+		val label = "Sort: ${sortMode.label}"
+		val json = buildJsonObject {
+			put("Name", label)
+			put("OriginalTitle", SORT_BUTTON_MARKER)
+			put("Id", java.util.UUID.randomUUID().toString())
+			put("Type", "Folder")
+		}.toString()
+		return BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(json))
+	}
+
 	private suspend fun fetchDecades(): List<Int> {
 		val userId = userRepository.currentUser.value?.id ?: return emptyList()
 
@@ -120,6 +145,6 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 		)
 		val available = response.content.years.orEmpty()
 
-		return available.map { (it / 10) * 10 }.distinct().sorted()
+		return available.map { (it / 10) * 10 }.distinct()
 	}
 }

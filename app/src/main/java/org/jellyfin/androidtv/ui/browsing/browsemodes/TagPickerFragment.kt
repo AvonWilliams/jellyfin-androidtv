@@ -30,16 +30,12 @@ import timber.log.Timber
 /**
  * A grid of curated TMDb keyword tags, shown when a tag-based browse mode tile (Mood, Story
  * Themes, etc.) is opened.
- *
- * Fetches the available tags for this library, intersects them with the curated tag list for
- * the selected mode, and shows only the tags that have matching items.
- *
- * Pattern follows [ByStudioFragment].
  */
 class TagPickerFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 6
 		const val CARD_HEIGHT = 200
+		const val SORT_BUTTON_MARKER = "__sort_button__"
 	}
 
 	private val apiClient by inject<ApiClient>()
@@ -50,6 +46,9 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var mode: BrowseMode
 	private lateinit var itemType: BaseItemKind
 	private lateinit var tagsAdapter: MutableObjectAdapter<Any>
+	private var sortMode = SortMode.A_Z
+	/** Raw (lowercase) tags before sorting, so we can re-sort when the mode changes. */
+	private var rawTags: List<String> = emptyList()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -71,8 +70,16 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		adapter = tagsAdapter
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			// Use originalTitle (raw tag) for filtering; name is title-cased for display.
 			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
+
+			// Sort button — cycle to next mode and refresh.
+			if (baseItem.originalTitle == SORT_BUTTON_MARKER) {
+				sortMode = sortMode.next()
+				refreshGrid()
+				return@OnItemViewClickedListener
+			}
+
+			// Regular tag — use originalTitle (raw tag) for filtering.
 			val tag = baseItem.originalTitle ?: baseItem.name ?: return@OnItemViewClickedListener
 			navigationRepository.navigate(
 				Destinations.libraryByTagItems(folder, tag, itemType.serialName)
@@ -92,22 +99,49 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 
 		if (!isAdded) return@launch
 
-		tags.forEach { tagName ->
+		rawTags = tags
+		refreshGrid()
+	}
+
+	/** Rebuilds the grid in the current [sortMode], with the sort button at position 0. */
+	private fun refreshGrid() {
+		tagsAdapter.clear()
+
+		// Sort button
+		tagsAdapter.add(makeSortButtonItem())
+
+		// Tag tiles, sorted by current mode
+		val sorted = when (sortMode) {
+			SortMode.A_Z -> rawTags.sorted()
+			SortMode.Z_A -> rawTags.sortedDescending()
+			SortMode.RANDOM -> rawTags.shuffled()
+		}
+
+		sorted.forEach { tagName ->
 			val displayName = tagName.toTitleCase()
-			// Name=title-cased for display, OriginalTitle=raw for tag filtering.
-			// Id and Type are required fields on BaseItemDto.
 			val json = buildJsonObject {
 				put("Name", displayName)
 				put("OriginalTitle", tagName)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
-			tagsAdapter.add(BaseItemDtoBaseRowItem(syntheticItem))
+			val item = Json.decodeFromString<BaseItemDto>(json)
+			tagsAdapter.add(BaseItemDtoBaseRowItem(item))
 		}
 	}
 
-	/** Returns the curated tags that are actually present in this library, sorted A–Z. */
+	/** Creates the sort-mode toggle button shown as the first grid tile. */
+	private fun makeSortButtonItem(): BaseItemDtoBaseRowItem {
+		val label = "Sort: ${sortMode.label}"
+		val json = buildJsonObject {
+			put("Name", label)
+			put("OriginalTitle", SORT_BUTTON_MARKER)
+			put("Id", java.util.UUID.randomUUID().toString())
+			put("Type", "Folder")
+		}.toString()
+		return BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(json))
+	}
+
 	private suspend fun fetchMatchingTags(): List<String> {
 		val userId = userRepository.currentUser.value?.id ?: return emptyList()
 
@@ -126,6 +160,19 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	}
 }
 
+/** Sort order for the tag/decade/rating picker grids. */
+enum class SortMode(val label: String) {
+	A_Z("A–Z"),
+	Z_A("Z–A"),
+	RANDOM("Random");
+
+	fun next(): SortMode = when (this) {
+		A_Z -> Z_A
+		Z_A -> RANDOM
+		RANDOM -> A_Z
+	}
+}
+
 /** Maps a browse mode to its curated tag list. Internal — shared with TagBrowseRowsFragment. */
 internal fun curatedTagsFor(mode: BrowseMode): List<String> = when (mode) {
 	BrowseMode.MOOD -> MOOD_TAGS
@@ -139,8 +186,6 @@ internal fun curatedTagsFor(mode: BrowseMode): List<String> = when (mode) {
 /**
  * Capitalises each word in a tag name for display, handling hyphens as word boundaries.
  * "feel good" → "Feel Good", "post-apocalyptic" → "Post-Apocalyptic".
- *
- * Ported from the web client's toTitleCase in pickTiles.ts.
  */
 internal fun String.toTitleCase(): String = buildString {
 	var capitalise = true

@@ -27,16 +27,11 @@ import org.jellyfin.sdk.model.api.QueryFiltersLegacy
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-/**
- * A grid of official content ratings (MPAA, BBFC, etc.) present in this library.
- *
- * Fetches the available official ratings from /Items/Filters and shows only ratings
- * that have at least one matching item.
- */
 class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 6
 		const val CARD_HEIGHT = 200
+		const val SORT_BUTTON_MARKER = "__sort_button__"
 	}
 
 	private val apiClient by inject<ApiClient>()
@@ -46,6 +41,8 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var folder: BaseItemDto
 	private lateinit var itemType: BaseItemKind
 	private lateinit var ratingsAdapter: MutableObjectAdapter<Any>
+	private var sortMode = SortMode.A_Z
+	private var rawRatings: List<String> = emptyList()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -69,8 +66,15 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 		adapter = ratingsAdapter
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			val rating = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
-				?: return@OnItemViewClickedListener
+			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
+
+			if (baseItem.originalTitle == SORT_BUTTON_MARKER) {
+				sortMode = sortMode.next()
+				refreshGrid()
+				return@OnItemViewClickedListener
+			}
+
+			val rating = baseItem.name ?: return@OnItemViewClickedListener
 			navigationRepository.navigate(
 				Destinations.libraryByAgeRatingItems(folder, rating, itemType.serialName)
 			)
@@ -89,20 +93,42 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 
 		if (!isAdded) return@launch
 
-		ratings.forEach { rating ->
-			// Build safely through kotlinx.serialization. Name, Id and Type
-			// are required fields on BaseItemDto.
+		rawRatings = ratings
+		refreshGrid()
+	}
+
+	private fun refreshGrid() {
+		ratingsAdapter.clear()
+		ratingsAdapter.add(makeSortButtonItem())
+
+		val sorted = when (sortMode) {
+			SortMode.A_Z -> rawRatings.sorted()
+			SortMode.Z_A -> rawRatings.sortedDescending()
+			SortMode.RANDOM -> rawRatings.shuffled()
+		}
+
+		sorted.forEach { rating ->
 			val json = buildJsonObject {
 				put("Name", rating)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			val syntheticItem = Json.decodeFromString<BaseItemDto>(json)
-			ratingsAdapter.add(BaseItemDtoBaseRowItem(syntheticItem))
+			val item = Json.decodeFromString<BaseItemDto>(json)
+			ratingsAdapter.add(BaseItemDtoBaseRowItem(item))
 		}
 	}
 
-	/** Fetches available official ratings from the server and returns them sorted A–Z. */
+	private fun makeSortButtonItem(): BaseItemDtoBaseRowItem {
+		val label = "Sort: ${sortMode.label}"
+		val json = buildJsonObject {
+			put("Name", label)
+			put("OriginalTitle", SORT_BUTTON_MARKER)
+			put("Id", java.util.UUID.randomUUID().toString())
+			put("Type", "Folder")
+		}.toString()
+		return BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(json))
+	}
+
 	private suspend fun fetchRatings(): List<String> {
 		val userId = userRepository.currentUser.value?.id ?: return emptyList()
 
@@ -114,6 +140,6 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 				"includeItemTypes" to itemType.serialName,
 			),
 		)
-		return response.content.officialRatings.orEmpty().sorted()
+		return response.content.officialRatings.orEmpty()
 	}
 }
