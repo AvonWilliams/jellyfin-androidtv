@@ -31,7 +31,6 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 6
 		const val CARD_HEIGHT = 200
-		const val SORT_BUTTON_MARKER = "__sort_button__"
 	}
 
 	private val apiClient by inject<ApiClient>()
@@ -41,8 +40,6 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var folder: BaseItemDto
 	private lateinit var itemType: BaseItemKind
 	private lateinit var decadesAdapter: MutableObjectAdapter<Any>
-	private var sortMode = SortMode.A_Z
-	private var rawDecades: List<Int> = emptyList()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -66,15 +63,8 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 		adapter = decadesAdapter
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
-
-			if (baseItem.originalTitle == SORT_BUTTON_MARKER) {
-				sortMode = sortMode.next()
-				refreshGrid()
-				return@OnItemViewClickedListener
-			}
-
-			val decadeLabel = baseItem.name ?: return@OnItemViewClickedListener
+			val decadeLabel = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
+				?: return@OnItemViewClickedListener
 			val decadeStartYear = decadeLabel.removeSuffix("s").toIntOrNull()
 				?: return@OnItemViewClickedListener
 			navigationRepository.navigate(
@@ -95,21 +85,7 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 
 		if (!isAdded) return@launch
 
-		rawDecades = decades
-		refreshGrid()
-	}
-
-	private fun refreshGrid() {
-		decadesAdapter.clear()
-		decadesAdapter.add(makeSortButtonItem())
-
-		val sorted = when (sortMode) {
-			SortMode.A_Z -> rawDecades.sorted()
-			SortMode.Z_A -> rawDecades.sortedDescending()
-			SortMode.RANDOM -> rawDecades.shuffled()
-		}
-
-		sorted.forEach { decadeStart ->
+		decades.forEach { decadeStart ->
 			val label = "${decadeStart}s"
 			val json = buildJsonObject {
 				put("Name", label)
@@ -119,17 +95,6 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 			val item = Json.decodeFromString<BaseItemDto>(json)
 			decadesAdapter.add(BaseItemDtoBaseRowItem(item))
 		}
-	}
-
-	private fun makeSortButtonItem(): BaseItemDtoBaseRowItem {
-		val label = "Sort: ${sortMode.label}"
-		val json = buildJsonObject {
-			put("Name", label)
-			put("OriginalTitle", SORT_BUTTON_MARKER)
-			put("Id", java.util.UUID.randomUUID().toString())
-			put("Type", "Folder")
-		}.toString()
-		return BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(json))
 	}
 
 	private suspend fun fetchDecades(): List<Int> {
@@ -145,6 +110,6 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 		)
 		val available = response.content.years.orEmpty()
 
-		return available.map { (it / 10) * 10 }.distinct()
+		return available.map { (it / 10) * 10 }.distinct().sorted()
 	}
 }

@@ -1,8 +1,8 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
 import android.os.Bundle
+import android.view.View
 import androidx.leanback.app.RowsSupportFragment
-import androidx.leanback.widget.ArrayObjectAdapter
 import androidx.leanback.widget.HeaderItem
 import androidx.leanback.widget.ListRow
 import androidx.leanback.widget.OnItemViewClickedListener
@@ -13,12 +13,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.data.repository.ItemRepository
-import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
 import org.jellyfin.androidtv.ui.itemhandling.ItemRowAdapter
@@ -54,6 +51,7 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 	private lateinit var rowsAdapter: MutableObjectAdapter<Row>
 	private var sortMode = SortMode.A_Z
 	private var rawTags: List<String> = emptyList()
+	private var baseTitle: String = ""
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -66,24 +64,33 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		val label = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
-		val titleText = label?.let { getString(it) } ?: mode.key
-		requireActivity().title = titleText
+		baseTitle = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
+			?.let { getString(it) } ?: mode.key
+		updateTitle()
 
 		rowsAdapter = MutableObjectAdapter(PositionableListRowPresenter())
 		adapter = rowsAdapter
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
-			if (baseItem.originalTitle == "__sort_button__") {
-				sortMode = sortMode.next()
-				refreshRows()
-			} else if (item is BaseRowItem) {
+			if (item is BaseRowItem) {
 				itemLauncher.launch(item, null, requireContext())
 			}
 		}
 
 		load()
+	}
+
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+		findTitleView(view)?.setOnClickListener {
+			sortMode = sortMode.next()
+			updateTitle()
+			refreshRows()
+		}
+	}
+
+	private fun updateTitle() {
+		requireActivity().title = "$baseTitle · ${sortMode.label}"
 	}
 
 	private fun load() = lifecycleScope.launch {
@@ -100,25 +107,9 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 		refreshRows()
 	}
 
-	/** Rebuilds all rows with the current [sortMode], sort button first. */
 	private fun refreshRows() {
 		rowsAdapter.clear()
 
-		// Sort button row — single tile that cycles sort mode on click.
-		val sortButtonJson = buildJsonObject {
-			put("Name", "Sort: ${sortMode.label}")
-			put("OriginalTitle", "__sort_button__")
-			put("Id", java.util.UUID.randomUUID().toString())
-			put("Type", "Folder")
-		}.toString()
-		val sortButtonItem = BaseItemDtoBaseRowItem(
-			Json.decodeFromString<BaseItemDto>(sortButtonJson)
-		)
-		val sortRowAdapter = ArrayObjectAdapter(CardPresenter(true, CARD_HEIGHT))
-		sortRowAdapter.add(sortButtonItem)
-		rowsAdapter.add(ListRow(HeaderItem(""), sortRowAdapter))
-
-		// Sort tags by current mode
 		val sorted = when (sortMode) {
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()

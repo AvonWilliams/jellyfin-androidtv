@@ -1,8 +1,10 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
 import android.os.Bundle
+import android.view.View
 import androidx.leanback.app.VerticalGridSupportFragment
 import androidx.leanback.widget.OnItemViewClickedListener
+import androidx.leanback.widget.TitleView
 import androidx.leanback.widget.VerticalGridPresenter
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -27,15 +29,10 @@ import org.jellyfin.sdk.model.api.QueryFiltersLegacy
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-/**
- * A grid of curated TMDb keyword tags, shown when a tag-based browse mode tile (Mood, Story
- * Themes, etc.) is opened.
- */
 class TagPickerFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 6
 		const val CARD_HEIGHT = 200
-		const val SORT_BUTTON_MARKER = "__sort_button__"
 	}
 
 	private val apiClient by inject<ApiClient>()
@@ -47,8 +44,8 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var itemType: BaseItemKind
 	private lateinit var tagsAdapter: MutableObjectAdapter<Any>
 	private var sortMode = SortMode.A_Z
-	/** Raw (lowercase) tags before sorting, so we can re-sort when the mode changes. */
 	private var rawTags: List<String> = emptyList()
+	private var baseTitle: String = ""
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -61,8 +58,9 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		val label = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
-		title = label?.let { getString(it) } ?: mode.key
+		baseTitle = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
+			?.let { getString(it) } ?: mode.key
+		updateTitle()
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
@@ -71,15 +69,6 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
 			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
-
-			// Sort button — cycle to next mode and refresh.
-			if (baseItem.originalTitle == SORT_BUTTON_MARKER) {
-				sortMode = sortMode.next()
-				refreshGrid()
-				return@OnItemViewClickedListener
-			}
-
-			// Regular tag — use originalTitle (raw tag) for filtering.
 			val tag = baseItem.originalTitle ?: baseItem.name ?: return@OnItemViewClickedListener
 			navigationRepository.navigate(
 				Destinations.libraryByTagItems(folder, tag, itemType.serialName)
@@ -87,6 +76,20 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		}
 
 		load()
+	}
+
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+		// Make the header title clickable to cycle sort mode.
+		findTitleView(view)?.setOnClickListener {
+			sortMode = sortMode.next()
+			updateTitle()
+			refreshGrid()
+		}
+	}
+
+	private fun updateTitle() {
+		title = "$baseTitle · ${sortMode.label}"
 	}
 
 	private fun load() = lifecycleScope.launch {
@@ -103,14 +106,9 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		refreshGrid()
 	}
 
-	/** Rebuilds the grid in the current [sortMode], with the sort button at position 0. */
 	private fun refreshGrid() {
 		tagsAdapter.clear()
 
-		// Sort button
-		tagsAdapter.add(makeSortButtonItem())
-
-		// Tag tiles, sorted by current mode
 		val sorted = when (sortMode) {
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()
@@ -118,28 +116,14 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		}
 
 		sorted.forEach { tagName ->
-			val displayName = tagName.toTitleCase()
 			val json = buildJsonObject {
-				put("Name", displayName)
+				put("Name", tagName.toTitleCase())
 				put("OriginalTitle", tagName)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			val item = Json.decodeFromString<BaseItemDto>(json)
-			tagsAdapter.add(BaseItemDtoBaseRowItem(item))
+			tagsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString(json)))
 		}
-	}
-
-	/** Creates the sort-mode toggle button shown as the first grid tile. */
-	private fun makeSortButtonItem(): BaseItemDtoBaseRowItem {
-		val label = "Sort: ${sortMode.label}"
-		val json = buildJsonObject {
-			put("Name", label)
-			put("OriginalTitle", SORT_BUTTON_MARKER)
-			put("Id", java.util.UUID.randomUUID().toString())
-			put("Type", "Folder")
-		}.toString()
-		return BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(json))
 	}
 
 	private suspend fun fetchMatchingTags(): List<String> {
@@ -160,7 +144,18 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	}
 }
 
-/** Sort order for the tag/decade/rating picker grids. */
+/** Find the Leanback [TitleView] in the fragment's view hierarchy. */
+internal fun findTitleView(root: View): TitleView? {
+	if (root is TitleView) return root
+	if (root is android.view.ViewGroup) {
+		for (i in 0 until root.childCount) {
+			val found = findTitleView(root.getChildAt(i))
+			if (found != null) return found
+		}
+	}
+	return null
+}
+
 enum class SortMode(val label: String) {
 	A_Z("A–Z"),
 	Z_A("Z–A"),
@@ -173,7 +168,6 @@ enum class SortMode(val label: String) {
 	}
 }
 
-/** Maps a browse mode to its curated tag list. Internal — shared with TagBrowseRowsFragment. */
 internal fun curatedTagsFor(mode: BrowseMode): List<String> = when (mode) {
 	BrowseMode.MOOD -> MOOD_TAGS
 	BrowseMode.STORY_THEMES -> STORY_THEME_TAGS
@@ -183,10 +177,6 @@ internal fun curatedTagsFor(mode: BrowseMode): List<String> = when (mode) {
 	else -> emptyList()
 }
 
-/**
- * Capitalises each word in a tag name for display, handling hyphens as word boundaries.
- * "feel good" → "Feel Good", "post-apocalyptic" → "Post-Apocalyptic".
- */
 internal fun String.toTitleCase(): String = buildString {
 	var capitalise = true
 	for (char in this@toTitleCase) {

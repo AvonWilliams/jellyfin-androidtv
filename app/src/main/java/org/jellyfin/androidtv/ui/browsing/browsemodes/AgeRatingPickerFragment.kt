@@ -1,6 +1,7 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
 import android.os.Bundle
+import android.view.View
 import androidx.leanback.app.VerticalGridSupportFragment
 import androidx.leanback.widget.OnItemViewClickedListener
 import androidx.leanback.widget.VerticalGridPresenter
@@ -31,7 +32,6 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 6
 		const val CARD_HEIGHT = 200
-		const val SORT_BUTTON_MARKER = "__sort_button__"
 	}
 
 	private val apiClient by inject<ApiClient>()
@@ -43,6 +43,7 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var ratingsAdapter: MutableObjectAdapter<Any>
 	private var sortMode = SortMode.A_Z
 	private var rawRatings: List<String> = emptyList()
+	private var baseTitle: String = ""
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -54,11 +55,12 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		title = getBrowseModes(folder.collectionType)
+		baseTitle = getBrowseModes(folder.collectionType)
 			?.firstOrNull { it.mode == BrowseMode.AGE_RATING }
 			?.label
 			?.let { getString(it) }
 			?: "Age Rating"
+		updateTitle()
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
@@ -67,13 +69,6 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
 			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
-
-			if (baseItem.originalTitle == SORT_BUTTON_MARKER) {
-				sortMode = sortMode.next()
-				refreshGrid()
-				return@OnItemViewClickedListener
-			}
-
 			val rating = baseItem.name ?: return@OnItemViewClickedListener
 			navigationRepository.navigate(
 				Destinations.libraryByAgeRatingItems(folder, rating, itemType.serialName)
@@ -81,6 +76,19 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 		}
 
 		load()
+	}
+
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+		findTitleView(view)?.setOnClickListener {
+			sortMode = sortMode.next()
+			updateTitle()
+			refreshGrid()
+		}
+	}
+
+	private fun updateTitle() {
+		title = "$baseTitle · ${sortMode.label}"
 	}
 
 	private fun load() = lifecycleScope.launch {
@@ -99,7 +107,6 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 
 	private fun refreshGrid() {
 		ratingsAdapter.clear()
-		ratingsAdapter.add(makeSortButtonItem())
 
 		val sorted = when (sortMode) {
 			SortMode.A_Z -> rawRatings.sorted()
@@ -113,20 +120,8 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			val item = Json.decodeFromString<BaseItemDto>(json)
-			ratingsAdapter.add(BaseItemDtoBaseRowItem(item))
+			ratingsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString(json)))
 		}
-	}
-
-	private fun makeSortButtonItem(): BaseItemDtoBaseRowItem {
-		val label = "Sort: ${sortMode.label}"
-		val json = buildJsonObject {
-			put("Name", label)
-			put("OriginalTitle", SORT_BUTTON_MARKER)
-			put("Id", java.util.UUID.randomUUID().toString())
-			put("Type", "Folder")
-		}.toString()
-		return BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(json))
 	}
 
 	private suspend fun fetchRatings(): List<String> {
