@@ -3,6 +3,8 @@ package org.jellyfin.androidtv.ui.browsing.browsemodes
 import android.os.Bundle
 import androidx.leanback.app.VerticalGridSupportFragment
 import androidx.leanback.widget.OnItemViewClickedListener
+import androidx.leanback.widget.Presenter
+import androidx.leanback.widget.PresenterSelector
 import androidx.leanback.widget.VerticalGridPresenter
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +63,14 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
-		ratingsAdapter = MutableObjectAdapter(CardPresenter(true, CARD_HEIGHT))
+		val sortPresenter = CardPresenter(true, 80)
+		val ratingPresenter = CardPresenter(true, CARD_HEIGHT)
+		ratingsAdapter = MutableObjectAdapter(object : PresenterSelector() {
+			override fun getPresenter(item: Any?): Presenter {
+				val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem
+				return if (baseItem?.originalTitle == "__sort__") sortPresenter else ratingPresenter
+			}
+		})
 		adapter = ratingsAdapter
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
