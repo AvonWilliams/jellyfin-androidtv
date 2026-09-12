@@ -99,5 +99,27 @@ fun SettingsLibrariesDisplayScreen(itemId: UUID, displayPreferencesId: String) {
 				modifier = Modifier.focusKey("enable_smart_view")
 			)
 		}
+		if (allowViewSelection) item {
+			var enableBrowseModes by rememberPreference(libraryPreferences, LibraryPreferences.enableBrowseModes)
+
+			ListButton(
+				headingContent = { Text(stringResource(R.string.pref_enable_browse_modes)) },
+				trailingContent = { Checkbox(checked = enableBrowseModes) },
+				captionContent = { Text(stringResource(R.string.pref_enable_browse_modes_description)) },
+				onClick = { enableBrowseModes = !enableBrowseModes },
+				modifier = Modifier.focusKey("enable_browse_modes")
+			)
+		}
+		if (allowViewSelection) item {
+			var enableTagRibbonShelves by rememberPreference(libraryPreferences, LibraryPreferences.enableTagRibbonShelves)
+
+			ListButton(
+				headingContent = { Text(stringResource(R.string.pref_enable_tag_ribbon_shelves)) },
+				trailingContent = { Checkbox(checked = enableTagRibbonShelves) },
+				captionContent = { Text(stringResource(R.string.pref_enable_tag_ribbon_shelves_description)) },
+				onClick = { enableTagRibbonShelves = !enableTagRibbonShelves },
+				modifier = Modifier.focusKey("enable_tag_ribbon_shelves")
+			)
+		}
 	}
 }
