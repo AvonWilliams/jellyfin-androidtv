@@ -65,4 +65,25 @@
     <color name="lb_basic_card_info_bg_color">@color/grey</color>
 
     <color name="background_filter">#94101010</color>
+
+    <!-- Browse mode tile icons. Tinted per tile so each is recognisable at a glance; applied at
+         draw time rather than in the drawables, which are shared with the rest of the app. -->
+    <color name="browse_mode_all">#B0BEC5</color>
+    <color name="browse_mode_just_added">#4DD0C4</color>
+    <color name="browse_mode_hidden_gems">#F2C14E</color>
+    <color name="browse_mode_random">#F08A5D</color>
+    <color name="browse_mode_genres">#C07CD6</color>
+    <color name="browse_mode_studios">#8D9EC6</color>
+    <color name="browse_mode_networks">#5AC8E0</color>
+    <color name="browse_mode_watch_again">#86C98B</color>
+    <color name="browse_mode_top_rated">#EECE55</color>
+    <color name="browse_mode_trending">#5CD672</color>
+    <color name="browse_mode_new_releases">#6FB3E0</color>
+    <color name="browse_mode_mood">#EC407A</color>
+    <color name="browse_mode_story_themes">#FF7043</color>
+    <color name="browse_mode_plot_elements">#26A69A</color>
+    <color name="browse_mode_worlds">#5C6BC0</color>
+    <color name="browse_mode_styles">#7E57C2</color>
+    <color name="browse_mode_decades">#7E9CD8</color>
+    <color name="browse_mode_age_rating">#9CCC65</color>
 </resources>

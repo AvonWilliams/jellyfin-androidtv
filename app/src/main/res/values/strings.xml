@@ -687,4 +687,29 @@
     <string name="truehd">TrueHD</string>
     <string name="eac3_atmos">DD+ Atmos</string>
     <string name="truehd_atmos">TrueHD Atmos</string>
+
+    <!-- Browse modes -->
+    <string name="lbl_browse_by">Browse by</string>
+    <string name="lbl_browse_mode_critics_picks">Critics\' Picks</string>
+    <string name="lbl_browse_mode_decades">Decades</string>
+    <string name="lbl_browse_mode_hidden_gems">Hidden Gems</string>
+    <string name="lbl_browse_mode_just_added">Just Added</string>
+    <string name="lbl_browse_mode_mood">Mood</string>
+    <string name="lbl_browse_mode_new_releases">New Releases</string>
+    <string name="lbl_browse_mode_plot_elements">Plot Elements</string>
+    <string name="lbl_browse_mode_story_themes">Story Themes</string>
+    <string name="lbl_browse_mode_styles">Styles</string>
+    <string name="lbl_browse_mode_top_rated">Top Rated</string>
+    <string name="lbl_browse_mode_trending">Trending</string>
+    <string name="lbl_browse_mode_watch_again">Watch Again</string>
+    <string name="lbl_browse_mode_worlds">Worlds</string>
+    <string name="lbl_browse_mode_age_rating">Age Rating</string>
+    <string name="lbl_studios">Studios</string>
+    <string name="lbl_networks">Networks</string>
+    <string name="lbl_no_top_rated_items">None of the top rated titles are in this library.</string>
+    <string name="lbl_no_trending_items">No trending titles are currently in this library.</string>
+    <string name="pref_enable_browse_modes">Browse modes</string>
+    <string name="pref_enable_browse_modes_description">Offer ways to browse when opening this library instead of going straight to the item grid</string>
+    <string name="pref_enable_tag_ribbon_shelves">Tag ribbon shelves</string>
+    <string name="pref_enable_tag_ribbon_shelves_description">Show tag-based modes (Mood, Story Themes, etc.) as horizontal poster shelves instead of a flat grid</string>
 </resources>
