@@ -671,6 +671,15 @@ fun setItemsFilter(
 	filters = filters,
 )
 
+fun setItemsDateCutoffs(
+	request: GetItemsRequest,
+	minDateLastSaved: java.time.LocalDateTime?,
+	minPremiereDate: java.time.LocalDateTime?,
+) = request.copy(
+	minDateLastSaved = minDateLastSaved,
+	minPremiereDate = minPremiereDate,
+)
+
 fun setAlbumArtistsStartLetter(
 	request: GetAlbumArtistsRequest,
 	startLetter: String?,

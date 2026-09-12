@@ -408,6 +408,8 @@ public class ItemRowAdapter extends MutableObjectAdapter<Object> {
                 break;
             default:
                 mQuery = ItemRowAdapterHelperKt.setItemsFilter(mQuery, filters.getFilters());
+                mQuery = ItemRowAdapterHelperKt.setItemsDateCutoffs(mQuery,
+                    filters.getMinDateLastSavedParsed(), filters.getMinPremiereDateParsed());
         }
         removeRow();
     }
