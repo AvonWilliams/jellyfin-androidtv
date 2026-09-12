@@ -36,7 +36,7 @@ class DiscoverFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 6
 		const val CARD_HEIGHT = 260
-		const val LIMIT = 60
+		const val LIMIT = 500
 	}
 
 	private val apiClient by inject<ApiClient>()
