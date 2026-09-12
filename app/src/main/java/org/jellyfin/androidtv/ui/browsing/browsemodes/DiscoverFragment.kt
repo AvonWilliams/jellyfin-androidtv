@@ -57,7 +57,7 @@ class DiscoverFragment : VerticalGridSupportFragment() {
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
-		itemsAdapter = MutableObjectAdapter(DiscoverCardPresenter(CARD_HEIGHT))
+		itemsAdapter = MutableObjectAdapter(discoverCardPresenter(CARD_HEIGHT))
 		adapter = itemsAdapter
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
@@ -88,7 +88,7 @@ class DiscoverFragment : VerticalGridSupportFragment() {
 
 		if (!isAdded) return@launch
 
-		items.forEach { itemsAdapter.add(BaseItemDtoBaseRowItem(it)) }
+		items.forEach { itemsAdapter.add(BaseItemDtoBaseRowItem(it, staticHeight = true)) }
 
 		if (items.isEmpty()) {
 			title = getString(

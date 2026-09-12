@@ -41,6 +41,7 @@ import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.ui.composable.item.ItemCard
 import org.jellyfin.androidtv.ui.composable.item.ItemCardBaseItemOverlay
 import org.jellyfin.androidtv.ui.composable.item.ItemPreview
+import org.jellyfin.androidtv.ui.composable.item.RankBadge
 import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.BaseRowType
@@ -59,6 +60,7 @@ class CardPresenter(
 	val imageType: ImageType,
 	val staticHeight: Int,
 	val uniformAspect: Boolean,
+	val showRankBadge: Boolean = false,
 ) : Presenter() {
 	constructor(showInfo: Boolean, imageType: ImageType, staticHeight: Int) : this(showInfo, imageType, staticHeight, false)
 	constructor(showInfo: Boolean, staticHeight: Int) : this(showInfo, ImageType.POSTER, staticHeight)
@@ -110,6 +112,7 @@ class CardPresenter(
 					imageType = imageType,
 					staticHeight = staticHeight,
 					uniformAspect = uniformAspect,
+					showRankBadge = showRankBadge,
 				)
 			}
 
@@ -285,6 +288,7 @@ private fun CardViewHolderContent(
 	imageType: ImageType,
 	staticHeight: Int,
 	uniformAspect: Boolean,
+	showRankBadge: Boolean,
 ) {
 	val context = LocalContext.current
 	val localDensity = LocalDensity.current
@@ -371,6 +375,18 @@ private fun CardViewHolderContent(
 							}
 						}
 					)
+				}
+				if (showRankBadge) {
+					item.baseItem?.indexNumber
+						?.takeIf { it > 0 }
+						?.let { rank ->
+							RankBadge(
+								rank = rank,
+								modifier = Modifier
+									.align(Alignment.TopStart)
+									.padding(4.dp),
+							)
+						}
 				}
 			},
 			modifier = Modifier
