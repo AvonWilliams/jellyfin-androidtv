@@ -69,7 +69,7 @@ class BrowseModesFragment : VerticalGridSupportFragment() {
 			definition.destination == BrowseModeDestination.DISCOVER ->
 				navigationRepository.navigate(Destinations.discover(folder, definition.mode.key))
 
-			definition.destination == BrowseModeDestination.TAG_PICKER -> {
+			definition.destination == BrowseModeDestination.TAG_PICKER -> lifecycleScope.launch {
 				val prefs = preferencesRepository.getLibraryPreferences(
 					folder.displayPreferencesId ?: folder.id.toString()
 				)

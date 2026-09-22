@@ -3,7 +3,7 @@ package org.jellyfin.androidtv.ui.settings.screen.library
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -27,8 +27,11 @@ fun SettingsLibrariesDisplayImageSizeScreen(itemId: UUID, displayPreferencesId: 
 	val router = LocalRouter.current
 	val preferencesRepository = koinInject<PreferencesRepository>()
 	val userView = rememberUserView(itemId)
-	val libraryPreferences = remember(displayPreferencesId) { preferencesRepository.getLibraryPreferences(displayPreferencesId) }
-	var posterSize by rememberPreference(libraryPreferences, LibraryPreferences.posterSize)
+	val libraryPreferences by produceState<LibraryPreferences?>(initialValue = null, displayPreferencesId) {
+		value = preferencesRepository.getLibraryPreferences(displayPreferencesId)
+	}
+	val prefs = libraryPreferences ?: return
+	var posterSize by rememberPreference(prefs, LibraryPreferences.posterSize)
 
 	SettingsColumn {
 		item {
