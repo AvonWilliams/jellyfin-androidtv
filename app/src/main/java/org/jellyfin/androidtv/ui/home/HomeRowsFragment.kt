@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -166,10 +167,12 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 		lifecycleScope.launch {
 			lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
 				api.webSocket.subscribe<UserDataChangedMessage>()
+					.debounce(1.5.seconds)
 					.onEach { refreshRows(force = true, delayed = false) }
 					.launchIn(this)
 
 				api.webSocket.subscribe<LibraryChangedMessage>()
+					.debounce(1.5.seconds)
 					.onEach { refreshRows(force = true, delayed = false) }
 					.launchIn(this)
 			}
