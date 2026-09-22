@@ -572,6 +572,10 @@ public class ItemRowAdapter extends MutableObjectAdapter<Object> {
     }
 
     public void Retrieve() {
+        if (isCurrentlyRetrieving()) {
+            Timber.i("Not retrieving because currently retrieving");
+            return;
+        }
         notifyRetrieveStarted();
         lastFullRetrieve = Instant.now();
         itemsLoaded = 0;
