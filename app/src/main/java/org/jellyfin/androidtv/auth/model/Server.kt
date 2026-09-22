@@ -1,6 +1,7 @@
 package org.jellyfin.androidtv.auth.model
 
 import org.jellyfin.androidtv.auth.repository.ServerRepository
+import org.jellyfin.androidtv.util.BrandingColors
 import org.jellyfin.sdk.model.ServerVersion
 import java.time.Instant
 import java.util.UUID
@@ -15,6 +16,7 @@ data class Server(
 	val version: String? = null,
 	val loginDisclaimer: String? = null,
 	val splashscreenEnabled: Boolean = false,
+	val brandingColors: BrandingColors? = null,
 	val setupCompleted: Boolean = true,
 	var dateLastAccessed: Instant = Instant.MIN,
 ) {

@@ -3,40 +3,56 @@ package org.jellyfin.androidtv.ui.base
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import org.jellyfin.androidtv.util.BrandingColors
 import org.jellyfin.design.Tokens
 
-fun colorScheme(): ColorScheme = ColorScheme(
-	background = Tokens.Color.colorGrey975,
-	onBackground = Tokens.Color.colorBluegrey25,
-	button = Color(0xB3747474),
-	onButton = Color(0xFFDDDDDD),
-	buttonFocused = Color(0xE6CCCCCC),
-	onButtonFocused = Color(0xFF444444),
-	buttonDisabled = Color(0x33747474),
-	onButtonDisabled = Color(0xFF686868),
-	buttonActive = Color(0x4DCCCCCC),
-	onButtonActive = Color(0xFFDDDDDD),
-	input = Color(0xB3747474),
-	onInput = Color(0xE6CCCCCC),
-	inputFocused = Color(0xE6CCCCCC),
-	onInputFocused = Color(0xFFDDDDDD),
-	rangeControlBackground = Tokens.Color.colorBluegrey700,
-	rangeControlFill = Tokens.Color.colorCyan500,
-	rangeControlKnob = Tokens.Color.colorBluegrey100,
-	seekbarBuffer = Tokens.Color.colorBluegrey300,
-	recording = Tokens.Color.colorRed300,
-	onRecording = Tokens.Color.colorRed25,
-	badge = Tokens.Color.colorCyan500,
-	onBadge = Tokens.Color.colorBluegrey100,
-	listHeader = Tokens.Color.colorGrey50,
-	listOverline = Tokens.Color.colorGrey500,
-	listHeadline = Tokens.Color.colorGrey25,
-	listCaption = Tokens.Color.colorGrey200,
-	listButton = Color.Transparent,
-	listButtonFocused = Tokens.Color.colorBluegrey800,
-	surface = Tokens.Color.colorBluegrey900,
-	scrim = Tokens.Color.colorBlack.copy(alpha = 0.67f),
-)
+fun colorScheme(branding: BrandingColors? = null): ColorScheme {
+	val base = ColorScheme(
+		background = Tokens.Color.colorGrey975,
+		onBackground = Tokens.Color.colorBluegrey25,
+		button = Color(0xB3747474),
+		onButton = Color(0xFFDDDDDD),
+		buttonFocused = Color(0xE6CCCCCC),
+		onButtonFocused = Color(0xFF444444),
+		buttonDisabled = Color(0x33747474),
+		onButtonDisabled = Color(0xFF686868),
+		buttonActive = Color(0x4DCCCCCC),
+		onButtonActive = Color(0xFFDDDDDD),
+		input = Color(0xB3747474),
+		onInput = Color(0xE6CCCCCC),
+		inputFocused = Color(0xE6CCCCCC),
+		onInputFocused = Color(0xFFDDDDDD),
+		rangeControlBackground = Tokens.Color.colorBluegrey700,
+		rangeControlFill = Tokens.Color.colorCyan500,
+		rangeControlKnob = Tokens.Color.colorBluegrey100,
+		seekbarBuffer = Tokens.Color.colorBluegrey300,
+		recording = Tokens.Color.colorRed300,
+		onRecording = Tokens.Color.colorRed25,
+		badge = Tokens.Color.colorCyan500,
+		onBadge = Tokens.Color.colorBluegrey100,
+		listHeader = Tokens.Color.colorGrey50,
+		listOverline = Tokens.Color.colorGrey500,
+		listHeadline = Tokens.Color.colorGrey25,
+		listCaption = Tokens.Color.colorGrey200,
+		listButton = Color.Transparent,
+		listButtonFocused = Tokens.Color.colorBluegrey800,
+		surface = Tokens.Color.colorBluegrey900,
+		scrim = Tokens.Color.colorBlack.copy(alpha = 0.67f),
+	)
+
+	if (branding == null) return base
+
+	return base.copy(
+		background = branding.background.toColor(),
+		surface = branding.surface.toColor(),
+		onBackground = branding.onBackground.toColor(),
+		rangeControlFill = branding.primary.toColor(),
+		badge = branding.primary.toColor(),
+		recording = branding.secondary.toColor(),
+	)
+}
+
+private fun String.toColor(): Color = Color(android.graphics.Color.parseColor(this))
 
 @Immutable
 data class ColorScheme(

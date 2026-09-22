@@ -16,6 +16,7 @@ import org.jellyfin.androidtv.auth.model.Server
 import org.jellyfin.androidtv.auth.model.ServerAdditionState
 import org.jellyfin.androidtv.auth.model.UnableToConnectState
 import org.jellyfin.androidtv.auth.store.AuthenticationStore
+import org.jellyfin.androidtv.util.parseBrandingColors
 import org.jellyfin.androidtv.util.sdk.toServer
 import org.jellyfin.sdk.Jellyfin
 import org.jellyfin.sdk.api.client.ApiClient
@@ -142,6 +143,7 @@ class ServerRepositoryImpl(
 			// Get branding info
 			val api = jellyfin.createApi(chosenRecommendation.address)
 			val branding = api.getBrandingOptionsOrDefault()
+			val brandingColors = parseBrandingColors(branding.customCss)
 
 			val id = systemInfo.id!!.toUUID()
 
@@ -151,6 +153,7 @@ class ServerRepositoryImpl(
 				version = systemInfo.version,
 				loginDisclaimer = branding.loginDisclaimer,
 				splashscreenEnabled = branding.splashscreenEnabled,
+				brandingColors = brandingColors,
 				setupCompleted = systemInfo.startupWizardCompleted ?: true,
 				lastUsed = Instant.now().toEpochMilli()
 			) ?: AuthenticationStoreServer(
@@ -159,6 +162,7 @@ class ServerRepositoryImpl(
 				version = systemInfo.version,
 				loginDisclaimer = branding.loginDisclaimer,
 				splashscreenEnabled = branding.splashscreenEnabled,
+				brandingColors = brandingColors,
 				setupCompleted = systemInfo.startupWizardCompleted ?: true,
 			)
 
@@ -220,6 +224,7 @@ class ServerRepositoryImpl(
 
 			// Get login disclaimer
 			val branding = api.getBrandingOptionsOrDefault()
+			val brandingColors = parseBrandingColors(branding.customCss)
 			val systemInfo by api.systemApi.getPublicSystemInfo()
 
 			server.copy(
@@ -227,6 +232,7 @@ class ServerRepositoryImpl(
 				version = systemInfo.version ?: server.version,
 				loginDisclaimer = branding.loginDisclaimer ?: server.loginDisclaimer,
 				splashscreenEnabled = branding.splashscreenEnabled,
+				brandingColors = brandingColors,
 				setupCompleted = systemInfo.startupWizardCompleted ?: server.setupCompleted,
 				lastRefreshed = now
 			)
@@ -250,6 +256,7 @@ class ServerRepositoryImpl(
 		version = version,
 		loginDisclaimer = loginDisclaimer,
 		splashscreenEnabled = splashscreenEnabled,
+		brandingColors = brandingColors,
 		setupCompleted = setupCompleted,
 		dateLastAccessed = Instant.ofEpochMilli(lastUsed),
 	)
