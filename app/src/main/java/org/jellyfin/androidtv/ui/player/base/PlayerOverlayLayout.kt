@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,8 +37,11 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jellyfin.androidtv.auth.repository.ServerRepository
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
+import org.jellyfin.androidtv.ui.base.colorScheme
 import org.jellyfin.androidtv.ui.composable.modifier.overscan
+import org.koin.compose.koinInject
 import timber.log.Timber
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -138,8 +142,11 @@ fun PlayerOverlayLayout(
 						}
 					},
 			) {
+				val serverRepository = koinInject<ServerRepository>()
+				val currentServer by serverRepository.currentServer.collectAsState()
+
 				JellyfinTheme(
-					colorScheme = JellyfinTheme.colorScheme.copy(
+					colorScheme = colorScheme(currentServer?.brandingColors).copy(
 						button = Color.Transparent
 					)
 				) {

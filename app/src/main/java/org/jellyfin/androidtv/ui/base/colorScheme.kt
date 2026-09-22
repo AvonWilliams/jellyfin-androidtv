@@ -52,7 +52,7 @@ fun colorScheme(branding: BrandingColors? = null): ColorScheme {
 	)
 }
 
-private fun String.toColor(): Color = Color(android.graphics.Color.parseColor(this))
+internal fun String.toColor(): Color = Color(android.graphics.Color.parseColor(this))
 
 @Immutable
 data class ColorScheme(

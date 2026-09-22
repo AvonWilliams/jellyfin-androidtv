@@ -28,7 +28,9 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import org.jellyfin.androidtv.R
+import org.jellyfin.androidtv.auth.repository.ServerRepository
 import org.jellyfin.androidtv.data.service.BackgroundService
+import org.jellyfin.androidtv.ui.base.toColor
 import org.koin.compose.koinInject
 
 @Composable
@@ -63,9 +65,11 @@ private fun AppThemeBackground() {
 @Composable
 fun AppBackground() {
 	val backgroundService = koinInject<BackgroundService>()
+	val serverRepository = koinInject<ServerRepository>()
 	val currentBackground by backgroundService.currentBackground.collectAsState()
 	val blurBackground by backgroundService.blurBackground.collectAsState()
 	val enabled by backgroundService.enabled.collectAsState()
+	val currentServer by serverRepository.currentServer.collectAsState()
 
 	if (enabled) {
 		AnimatedContent(
@@ -88,7 +92,16 @@ fun AppBackground() {
 						.then(if (blurBackground) Modifier.blur(10.dp) else Modifier)
 				)
 			} else {
-				AppThemeBackground()
+				val branding = currentServer?.brandingColors
+				if (branding != null) {
+					Box(
+						modifier = Modifier
+							.fillMaxSize()
+							.background(branding.background.toColor())
+					)
+				} else {
+					AppThemeBackground()
+				}
 			}
 		}
 	}
