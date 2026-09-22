@@ -16,7 +16,7 @@ data class BrandingColors(
 	val secondary: String,
 )
 
-private val rootBlockRegex = Regex(":root\\s*\\{([^}]*)}")
+private val rootBlockRegex = Regex(":root\\s*\\{([^}]*)\\}")
 private val variableRegex = Regex("(--[A-Za-z0-9_-]+)\\s*:\\s*([^;]+);")
 private val varReferenceRegex = Regex("var\\((--[A-Za-z0-9_-]+)\\)")
 private val rgbRegex = Regex("rgb\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)")
