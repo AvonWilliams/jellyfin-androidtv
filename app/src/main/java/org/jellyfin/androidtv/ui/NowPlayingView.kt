@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,7 +66,7 @@ fun NowPlayingComposable(
 
 	val entry by rememberQueueEntry(playbackManager)
 	val item = entry?.run { baseItemFlow.collectAsState(baseItem) }?.value
-	val progress by rememberPlayerProgress(playbackManager)
+	val progress = rememberPlayerProgress(playbackManager)
 
 	LaunchedEffect(item == null) { onFocusableChange(item != null) }
 
@@ -91,13 +92,16 @@ fun NowPlayingComposable(
 						modifier = Modifier
 							.padding(3.dp)
 					) {
-						val image = item.itemImages[ImageType.PRIMARY] ?: item.albumPrimaryImage ?: item.parentImages[ImageType.PRIMARY]
+						val image = remember(item) { item.itemImages[ImageType.PRIMARY] ?: item.albumPrimaryImage ?: item.parentImages[ImageType.PRIMARY] }
 						val progressFillColor = JellyfinTheme.colorScheme.rangeControlFill
 
+						val imageUrl = remember(item, api) { image?.getUrl(api) }
+						val placeholder = remember { ContextCompat.getDrawable(LocalContext.current, R.drawable.ic_album) }
+
 						AsyncImage(
-							url = image?.getUrl(api),
+							url = imageUrl,
 							blurHash = image?.blurHash,
-							placeholder = ContextCompat.getDrawable(LocalContext.current, R.drawable.ic_album),
+							placeholder = placeholder,
 							aspectRatio = image?.aspectRatio ?: 1f,
 							modifier = Modifier
 								.size(35.dp)
@@ -119,7 +123,7 @@ fun NowPlayingComposable(
 										color = progressFillColor,
 										useCenter = false,
 										startAngle = -90f,
-										sweepAngle = 360f * progress,
+										sweepAngle = 360f * progress.value,
 									)
 								},
 							scaleType = ImageView.ScaleType.CENTER_CROP,
@@ -132,8 +136,8 @@ fun NowPlayingComposable(
 						) {
 							// Name
 							Text(text = item.name.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
-							val artists = item.artists ?: item.albumArtists ?: item.albumArtist?.let(::listOf)
-							Text(text = artists?.joinToString(", ").orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+							val artistText = remember(item) { (item.artists ?: item.albumArtists ?: item.albumArtist?.let(::listOf))?.joinToString(", ").orEmpty() }
+							Text(text = artistText, maxLines = 1, overflow = TextOverflow.Ellipsis)
 						}
 					}
 				}
