@@ -96,7 +96,8 @@ fun NowPlayingComposable(
 						val progressFillColor = JellyfinTheme.colorScheme.rangeControlFill
 
 						val imageUrl = remember(item, api) { image?.getUrl(api) }
-						val placeholder = remember { ContextCompat.getDrawable(LocalContext.current, R.drawable.ic_album) }
+						val context = LocalContext.current
+						val placeholder = remember { ContextCompat.getDrawable(context, R.drawable.ic_album) }
 
 						AsyncImage(
 							url = imageUrl,
