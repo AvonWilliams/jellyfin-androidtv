@@ -69,9 +69,10 @@ class BackgroundService(
 		// Enable blur for backdrops
 		_blurBackground.value = backdropBehavior == BackdropBehavior.BACKDROP_WITH_BLUR
 
-		// Get all backdrop urls
+		// Get all backdrop urls, sized to the display so the server downscales them
+		val metrics = context.resources.displayMetrics
 		val backdropUrls = (baseItem.itemBackdropImages + baseItem.parentBackdropImages)
-			.map { it.getUrl(api) }
+			.map { it.getUrl(api, maxWidth = metrics.widthPixels, maxHeight = metrics.heightPixels) }
 			.toSet()
 
 		loadBackgrounds(backdropUrls)
@@ -108,7 +109,7 @@ class BackgroundService(
 		// Cancel current loading job
 		loadBackgroundsJob?.cancel()
 		loadBackgroundsJob = scope.launch(Dispatchers.IO) {
-			_backgrounds = backdropUrls.mapNotNull { url ->
+			_backgrounds = backdropUrls.take(3).mapNotNull { url ->
 				imageLoader.execute(
 					request = ImageRequest.Builder(context).data(url).build()
 				).image?.toBitmap()?.asImageBitmap()
