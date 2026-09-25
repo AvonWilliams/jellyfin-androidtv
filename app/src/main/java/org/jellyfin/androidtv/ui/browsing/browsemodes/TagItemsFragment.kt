@@ -38,7 +38,7 @@ import timber.log.Timber
 class TagItemsFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 6
-		const val CARD_HEIGHT = 260
+		const val CARD_HEIGHT = 150
 		const val LIMIT = 200
 	}
 

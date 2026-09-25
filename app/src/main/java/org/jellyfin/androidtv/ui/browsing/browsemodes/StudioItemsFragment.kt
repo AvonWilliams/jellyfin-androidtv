@@ -30,7 +30,7 @@ import timber.log.Timber
 class StudioItemsFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 6
-		const val CARD_HEIGHT = 260
+		const val CARD_HEIGHT = 150
 	}
 
 	private val apiClient by inject<ApiClient>()

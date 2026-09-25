@@ -46,7 +46,7 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 	private companion object {
 		const val MAX_ROWS = 30
 		const val CHUNK_SIZE = 50
-		const val CARD_HEIGHT = 260
+		const val CARD_HEIGHT = 150
 	}
 
 	private val apiClient by inject<ApiClient>()
