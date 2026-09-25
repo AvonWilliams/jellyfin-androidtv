@@ -17,6 +17,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.request.target
 import coil3.request.transformations
+import coil3.size.ViewSizeResolver
 import coil3.transform.CircleCropTransformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -100,6 +101,7 @@ class AsyncImageView @JvmOverloads constructor(
 
 					target(this@AsyncImageView)
 					data(url)
+					size(ViewSizeResolver(this@AsyncImageView))
 					placeholder(placeholderOrBlurHash?.asImage())
 					if (circleCrop) transformations(CircleCropTransformation())
 					error(placeholder?.asImage())
