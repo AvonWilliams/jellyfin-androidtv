@@ -16,7 +16,14 @@ class MediaCodecQuery(
 	private val softwareCodecsEnabled: Boolean,
 ) {
 	private val MediaCodecInfo.isSoftwareCodec: Boolean
-		get() = AndroidVersion.isAtLeastQ && isSoftwareOnly
+		get() = when {
+			AndroidVersion.isAtLeastQ -> isSoftwareOnly
+			// Pre-Q (API < 29) has no isSoftwareOnly flag. AOSP software decoders use the
+			// OMX.google.* prefix; vendor hardware decoders use their own prefix.
+			// Without this, pre-Q software decoders are never filtered out, which inflates
+			// the reported device profile and makes the server direct-play undecodable streams.
+			else -> name.startsWith("OMX.google.", ignoreCase = true)
+		}
 
 	private fun decoderInfos(): Sequence<MediaCodecInfo> =
 		mediaCodecList.codecInfos.asSequence()
