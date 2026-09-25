@@ -34,7 +34,7 @@ import timber.log.Timber
  */
 class DiscoverFragment : VerticalGridSupportFragment() {
 	private companion object {
-		const val COLUMNS = 6
+		const val COLUMNS = 7
 		const val CARD_HEIGHT = 150
 		const val LIMIT = 500
 	}

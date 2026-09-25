@@ -29,7 +29,7 @@ import timber.log.Timber
 /** The items a single studio is credited on, within one library. */
 class StudioItemsFragment : VerticalGridSupportFragment() {
 	private companion object {
-		const val COLUMNS = 6
+		const val COLUMNS = 7
 		const val CARD_HEIGHT = 150
 	}
 
