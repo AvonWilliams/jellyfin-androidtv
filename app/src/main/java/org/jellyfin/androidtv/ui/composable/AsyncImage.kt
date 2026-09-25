@@ -2,24 +2,29 @@ package org.jellyfin.androidtv.ui.composable
 
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.viewinterop.AndroidView
-import org.jellyfin.androidtv.ui.AsyncImageView
+import androidx.core.graphics.drawable.toBitmap
+import coil3.ImageLoader
+import coil3.compose.rememberAsyncImagePainter
 import org.jellyfin.androidtv.util.BlurHashDecoder
+import org.koin.compose.koinInject
+import kotlin.math.round
 
-private data class AsyncImageState(
-	val url: String?,
-	val blurHash: String?,
-)
+private fun ImageView.ScaleType.toContentScale(): ContentScale = when (this) {
+	ImageView.ScaleType.CENTER_CROP -> ContentScale.Crop
+	ImageView.ScaleType.FIT_XY -> ContentScale.FillBounds
+	ImageView.ScaleType.CENTER -> ContentScale.None
+	ImageView.ScaleType.CENTER_INSIDE -> ContentScale.Inside
+	else -> ContentScale.Fit
+}
 
 @Composable
 fun AsyncImage(
@@ -31,31 +36,43 @@ fun AsyncImage(
 	blurHashResolution: Int = 32,
 	scaleType: ImageView.ScaleType? = null,
 ) {
-	// Only the important properties are added to AsyncImageState
-	var state by remember { mutableStateOf<AsyncImageState?>(null) }
+	val imageLoader = koinInject<ImageLoader>()
+	val contentScale = scaleType?.toContentScale() ?: ContentScale.Fit
 
-	AndroidView(
+	val placeholderPainter = placeholder?.let { drawable ->
+		remember(drawable) { BitmapPainter(drawable.toBitmap().asImageBitmap()) }
+	}
+
+	val blurHashPlaceholder = blurHash?.let { hash ->
+		val width = if (aspectRatio > 1) round(blurHashResolution * aspectRatio).toInt() else blurHashResolution
+		val height = if (aspectRatio >= 1) blurHashResolution else round(blurHashResolution / aspectRatio).toInt()
+		remember(hash, width, height) {
+			BlurHashDecoder.decode(hash, width, height)?.asImageBitmap()?.let(::BitmapPainter)
+		}
+	}
+
+	if (url == null) {
+		placeholderPainter?.let {
+			Image(
+				painter = it,
+				contentDescription = null,
+				modifier = modifier,
+				contentScale = contentScale,
+			)
+		}
+		return
+	}
+
+	Image(
+		painter = rememberAsyncImagePainter(
+			model = url,
+			imageLoader = imageLoader,
+			placeholder = blurHashPlaceholder ?: placeholderPainter,
+			error = placeholderPainter,
+		),
+		contentDescription = null,
 		modifier = modifier,
-		factory = { context ->
-			AsyncImageView(context).also { view ->
-				view.adjustViewBounds = true
-				view.scaleType = scaleType ?: ImageView.ScaleType.FIT_CENTER
-			}
-		},
-		update = { view ->
-			val compositionState = AsyncImageState(url, blurHash)
-			if (state != compositionState) {
-				state = compositionState
-
-				view.load(
-					url = compositionState.url,
-					blurHash = compositionState.blurHash,
-					placeholder = placeholder,
-					aspectRatio = aspectRatio.toDouble(),
-					blurHashResolution = blurHashResolution,
-				)
-			}
-		},
+		contentScale = contentScale,
 	)
 }
 
