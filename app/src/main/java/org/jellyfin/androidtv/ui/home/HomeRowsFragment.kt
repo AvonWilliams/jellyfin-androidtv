@@ -173,7 +173,7 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 
 				api.webSocket.subscribe<LibraryChangedMessage>()
 					.debounce(1.5.seconds)
-					.onEach { refreshRows(force = true, delayed = false) }
+					.onEach { refreshRows(force = false, delayed = false) }
 					.launchIn(this)
 			}
 		}
@@ -217,7 +217,17 @@ class HomeRowsFragment : RowsSupportFragment(), AudioEventListener, View.OnKeyLi
 		nowPlaying.update(requireContext(), adapter as MutableObjectAdapter<Row>)
 	}
 
+	private var lastForceRefresh = 0L
+
 	private fun refreshRows(force: Boolean = false, delayed: Boolean = true) {
+		// Throttle forced refreshes: re-fetching every row is expensive, so cap how often
+		// a forced refresh can run regardless of socket-event cadence.
+		if (force) {
+			val now = System.currentTimeMillis()
+			if (now - lastForceRefresh < 30_000L) return
+			lastForceRefresh = now
+		}
+
 		lifecycleScope.launch(Dispatchers.IO) {
 			if (delayed) delay(1.5.seconds)
 
