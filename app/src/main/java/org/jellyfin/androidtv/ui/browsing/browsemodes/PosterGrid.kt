@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import coil3.ImageLoader
 import coil3.request.ImageRequest
 import org.jellyfin.androidtv.ui.base.Text
+import org.jellyfin.androidtv.ui.browsing.composable.inforow.BaseItemInfoRow
 import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.ui.composable.item.ItemCard
 import org.jellyfin.androidtv.ui.composable.item.RankBadge
@@ -46,7 +48,7 @@ import org.koin.compose.koinInject
 
 const val POSTER_COLUMNS = 7
 
-/** A poster grid with a title header and sort description, rendered Compose-native. */
+/** A poster grid with a legacy-style detail header, rendered Compose-native. */
 @Composable
 internal fun PosterGrid(
 	title: String,
@@ -60,6 +62,7 @@ internal fun PosterGrid(
 	val context = LocalContext.current
 	val imageHelper = remember(api) { ImageHelper(api) }
 	val gridState = rememberLazyGridState()
+	var focusedItem by remember { mutableStateOf<BaseItemDto?>(null) }
 
 	// Prefetch posters ahead of the scroll so images are ready when they come into view.
 	LaunchedEffect(gridState) {
@@ -74,18 +77,21 @@ internal fun PosterGrid(
 	}
 
 	Column(modifier = Modifier.fillMaxSize()) {
+		// Header: big title (library, or the focused item) + detail info row.
 		Text(
-			text = title,
+			text = focusedItem?.name?.orEmpty() ?: title,
 			fontSize = 24.sp,
 			color = Color.White,
 			modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
 		)
-		Text(
-			text = "${items.size} items",
-			fontSize = 14.sp,
-			color = Color(0xCCFFFFFF),
-			modifier = Modifier.padding(horizontal = 16.dp),
-		)
+		Box(
+			modifier = Modifier
+				.fillMaxWidth()
+				.height(28.dp)
+				.padding(horizontal = 16.dp),
+		) {
+			focusedItem?.let { BaseItemInfoRow(it, it.mediaSources?.firstOrNull(), includeRuntime = true) }
+		}
 
 		Box(modifier = Modifier.fillMaxSize()) {
 			LazyVerticalGrid(
@@ -95,7 +101,14 @@ internal fun PosterGrid(
 				verticalArrangement = Arrangement.spacedBy(4.dp),
 			) {
 				items(items) { item ->
-					PosterCard(item, imageHelper, api, showRankBadge) { onItemClick(item) }
+					PosterCard(
+						item,
+						imageHelper,
+						api,
+						showRankBadge,
+						onFocus = { focusedItem = item },
+						onClick = { onItemClick(item) },
+					)
 				}
 			}
 
@@ -121,6 +134,7 @@ private fun PosterCard(
 	imageHelper: ImageHelper,
 	api: ApiClient,
 	showRankBadge: Boolean,
+	onFocus: () -> Unit,
 	onClick: () -> Unit,
 ) {
 	var focused by remember { mutableStateOf(false) }
@@ -132,7 +146,10 @@ private fun PosterCard(
 		modifier = Modifier
 			.aspectRatio(2f / 3f)
 			.padding(4.dp)
-			.onFocusChanged { focused = it.isFocused }
+			.onFocusChanged { focusState ->
+				focused = focusState.isFocused
+				if (focusState.isFocused) onFocus()
+			}
 			.focusable()
 			.clickable(onClick = onClick)
 			.then(if (focused) Modifier.border(3.dp, Color.White) else Modifier),
