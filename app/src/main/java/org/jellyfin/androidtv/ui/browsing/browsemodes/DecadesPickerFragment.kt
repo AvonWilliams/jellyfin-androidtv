@@ -25,6 +25,7 @@ import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.QueryFiltersLegacy
+import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
@@ -38,6 +39,8 @@ class DecadesPickerFragment : Fragment() {
 	private lateinit var itemType: BaseItemKind
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
+	private var decadeList: List<Int> = emptyList()
+	private var decadeCounts: Map<String, Int> = emptyMap()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -91,15 +94,42 @@ class DecadesPickerFragment : Fragment() {
 
 		if (!isAdded) return@launch
 
-		items.value = decades.map { decadeStart ->
+		decadeList = decades
+		rebuildItems()
+		launch { withContext(Dispatchers.IO) { fetchDecadeCounts() } }
+	}
+
+	private fun rebuildItems() {
+		items.value = decadeList.map { decadeStart ->
 			val label = "${decadeStart}s"
+			val count = decadeCounts[label]
+			val display = if (count != null) "$label ($count)" else label
 			val json = buildJsonObject {
-				put("Name", label)
+				put("Name", display)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
 			Json.decodeFromString<BaseItemDto>(json)
 		}
+	}
+
+	private suspend fun fetchDecadeCounts() {
+		decadeCounts = fetchItemCounts(
+			api = apiClient,
+			cacheKey = countCacheKey(folder.id, "decade"),
+			values = decadeList.map { "${it}s" },
+			request = { label ->
+				val start = label.removeSuffix("s").toIntOrNull() ?: 0
+				GetItemsRequest(
+					parentId = folder.id,
+					includeItemTypes = setOf(itemType),
+					years = (start..start + 9).toSet(),
+					recursive = true,
+					limit = 0,
+				)
+			},
+		)
+		if (isAdded) withContext(Dispatchers.Main) { rebuildItems() }
 	}
 
 	private suspend fun fetchDecades(): List<Int> {

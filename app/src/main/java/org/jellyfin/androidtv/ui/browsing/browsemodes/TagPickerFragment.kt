@@ -176,24 +176,20 @@ class TagPickerFragment : Fragment() {
 
 	/** Fetches per-tag item counts for Most/Fewest items sorting. */
 	private suspend fun fetchTagCounts() {
-		val counts = mutableMapOf<String, Int>()
-		rawTags.forEach { tag ->
-			try {
-				val result = apiClient.itemsApi.getItems(
-					GetItemsRequest(
-						parentId = folder.id,
-						includeItemTypes = setOf(itemType),
-						tags = setOf(tag),
-						recursive = true,
-						limit = 0,
-					)
+		tagCounts = fetchItemCounts(
+			api = apiClient,
+			cacheKey = countCacheKey(folder.id, "tag:${mode.key}"),
+			values = rawTags,
+			request = { tag ->
+				GetItemsRequest(
+					parentId = folder.id,
+					includeItemTypes = setOf(itemType),
+					tags = setOf(tag),
+					recursive = true,
+					limit = 0,
 				)
-				counts[tag] = result.content.totalRecordCount ?: 0
-			} catch (_: Exception) {
-				counts[tag] = 0
-			}
-		}
-		tagCounts = counts
+			},
+		)
 		if (isAdded) withContext(Dispatchers.Main) { refreshGrid() }
 	}
 }

@@ -78,7 +78,13 @@ internal fun PosterGrid(
 			text = title,
 			fontSize = 24.sp,
 			color = Color.White,
-			modifier = Modifier.padding(16.dp),
+			modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
+		)
+		Text(
+			text = "${items.size} items",
+			fontSize = 14.sp,
+			color = Color(0xCCFFFFFF),
+			modifier = Modifier.padding(horizontal = 16.dp),
 		)
 
 		Box(modifier = Modifier.fillMaxSize()) {

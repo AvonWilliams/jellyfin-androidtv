@@ -167,24 +167,20 @@ class AgeRatingPickerFragment : Fragment() {
 	}
 
 	private suspend fun fetchRatingCounts() {
-		val counts = mutableMapOf<String, Int>()
-		rawRatings.forEach { rating ->
-			try {
-				val result = apiClient.itemsApi.getItems(
-					GetItemsRequest(
-						parentId = folder.id,
-						includeItemTypes = setOf(itemType),
-						officialRatings = setOf(rating),
-						recursive = true,
-						limit = 0,
-					)
+		ratingCounts = fetchItemCounts(
+			api = apiClient,
+			cacheKey = countCacheKey(folder.id, "rating"),
+			values = rawRatings,
+			request = { rating ->
+				GetItemsRequest(
+					parentId = folder.id,
+					includeItemTypes = setOf(itemType),
+					officialRatings = setOf(rating),
+					recursive = true,
+					limit = 0,
 				)
-				counts[rating] = result.content.totalRecordCount ?: 0
-			} catch (_: Exception) {
-				counts[rating] = 0
-			}
-		}
-		ratingCounts = counts
+			},
+		)
 		if (isAdded) withContext(Dispatchers.Main) { refreshGrid() }
 	}
 }

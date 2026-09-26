@@ -6,7 +6,6 @@ import org.jellyfin.androidtv.ui.browsing.BrowseGridFragment
 import org.jellyfin.androidtv.ui.browsing.BrowseRecordingsFragment
 import org.jellyfin.androidtv.ui.browsing.BrowseScheduleFragment
 import org.jellyfin.androidtv.ui.browsing.BrowseViewFragment
-import org.jellyfin.androidtv.ui.browsing.ByGenreFragment
 import org.jellyfin.androidtv.ui.browsing.ByLetterFragment
 import org.jellyfin.androidtv.ui.browsing.CollectionFragment
 import org.jellyfin.androidtv.ui.browsing.GenericFolderFragment
@@ -18,6 +17,8 @@ import org.jellyfin.androidtv.ui.browsing.browsemodes.ByStudioFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.DecadesItemsFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.DecadesPickerFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.DiscoverFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.GenreItemsFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.GenrePickerFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.StudioItemsFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.TagBrowseRowsFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.TagItemsFragment
@@ -73,8 +74,16 @@ object Destinations {
 
 	// TODO only pass item id instead of complete JSON to browsing destinations
 	fun libraryByGenres(item: BaseItemDto, includeType: String) =
-		fragmentDestination<ByGenreFragment> {
+		fragmentDestination<GenrePickerFragment> {
 			putString(Extras.Folder, Json.encodeToString(item))
+			putString(Extras.IncludeType, includeType)
+		}
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun libraryByGenreItems(item: BaseItemDto, genre: String, includeType: String) =
+		fragmentDestination<GenreItemsFragment> {
+			putString(Extras.Folder, Json.encodeToString(item))
+			putString(Extras.Tag, genre)
 			putString(Extras.IncludeType, includeType)
 		}
 

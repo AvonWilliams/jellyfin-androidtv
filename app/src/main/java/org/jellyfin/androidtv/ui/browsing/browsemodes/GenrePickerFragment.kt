@@ -19,22 +19,17 @@ import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.sdk.api.client.ApiClient
-import org.jellyfin.sdk.api.client.extensions.studiosApi
+import org.jellyfin.sdk.api.client.extensions.genresApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.CollectionType
+import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.request.GetItemsRequest
-import org.jellyfin.sdk.model.api.request.GetStudiosRequest
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-/**
- * The studios of a library, as a selectable text list with item counts.
- *
- * Deliberately not modelled on [org.jellyfin.androidtv.ui.browsing.ByGenreFragment], which builds
- * one row per value and retrieves them all up front. A library holds an order of magnitude more
- * studios than genres, so that shape would fire hundreds of requests at once on opening the screen.
- */
-class ByStudioFragment : Fragment() {
+/** The genres of a library, as a selectable text list with item counts. */
+class GenrePickerFragment : Fragment() {
 	private val apiClient by inject<ApiClient>()
 	private val navigationRepository by inject<NavigationRepository>()
 
@@ -42,22 +37,24 @@ class ByStudioFragment : Fragment() {
 	private lateinit var itemType: BaseItemKind
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
-	private var studioList: List<BaseItemDto> = emptyList()
-	private var studioCounts: Map<String, Int> = emptyMap()
+	private var genreList: List<BaseItemDto> = emptyList()
+	private var genreCounts: Map<String, Int> = emptyMap()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
 		folder = Json.decodeFromString<BaseItemDto>(requireArguments().getString(Extras.Folder)!!)
-		val includeType = requireArguments().getString(Extras.IncludeType)
 
 		itemType = when (folder.collectionType) {
-			org.jellyfin.sdk.model.api.CollectionType.TVSHOWS -> BaseItemKind.SERIES
+			CollectionType.TVSHOWS -> BaseItemKind.SERIES
 			else -> BaseItemKind.MOVIE
 		}
 
-		title.value = folder.name.orEmpty()
-		load(includeType)
+		title.value = getBrowseModes(folder.collectionType)
+			?.firstOrNull { it.mode == BrowseMode.GENRES }
+			?.label
+			?.let { getString(it) }
+			?: "Genres"
 	}
 
 	override fun onCreateView(
@@ -72,39 +69,42 @@ class ByStudioFragment : Fragment() {
 		}
 	}
 
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+		load()
+	}
+
 	private fun onClick(item: BaseItemDto) {
-		val studio = item.originalTitle ?: item.name ?: return
+		val genre = item.originalTitle ?: item.name ?: return
 		navigationRepository.navigate(
-			Destinations.libraryByStudioItems(folder, studio)
+			Destinations.libraryByGenreItems(folder, genre, itemType.serialName)
 		)
 	}
 
-	private fun load(includeType: String?) = lifecycleScope.launch {
-		val studios = try {
+	private fun load() = lifecycleScope.launch {
+		val genres = try {
 			withContext(Dispatchers.IO) {
-				apiClient.studiosApi.getStudios(
-					GetStudiosRequest(
-						parentId = folder.id,
-						includeItemTypes = includeType?.let(BaseItemKind::fromNameOrNull)?.let(::setOf),
-					)
+				apiClient.genresApi.getGenres(
+					parentId = folder.id,
+					sortBy = setOf(ItemSortBy.SORT_NAME),
 				).content.items
 			}
 		} catch (error: Exception) {
-			Timber.e(error, "Unable to load studios for %s", folder.name)
+			Timber.e(error, "Unable to load genres for %s", folder.name)
 			emptyList()
 		}
 
 		if (!isAdded) return@launch
 
-		studioList = studios.filter { !it.name.isNullOrBlank() }.sortedBy { it.name }
+		genreList = genres.filter { !it.name.isNullOrBlank() }.sortedBy { it.name }
 		rebuildItems()
-		launch { withContext(Dispatchers.IO) { fetchStudioCounts() } }
+		launch { withContext(Dispatchers.IO) { fetchGenreCounts() } }
 	}
 
 	private fun rebuildItems() {
-		items.value = studioList.map { studio ->
-			val name = studio.name.orEmpty()
-			val count = studioCounts[name]
+		items.value = genreList.map { genre ->
+			val name = genre.name.orEmpty()
+			val count = genreCounts[name]
 			val display = if (count != null) "$name ($count)" else name
 			val json = buildJsonObject {
 				put("Name", display)
@@ -116,16 +116,16 @@ class ByStudioFragment : Fragment() {
 		}
 	}
 
-	private suspend fun fetchStudioCounts() {
-		studioCounts = fetchItemCounts(
+	private suspend fun fetchGenreCounts() {
+		genreCounts = fetchItemCounts(
 			api = apiClient,
-			cacheKey = countCacheKey(folder.id, "studio"),
-			values = studioList.map { it.name.orEmpty() },
-			request = { studio ->
+			cacheKey = countCacheKey(folder.id, "genre"),
+			values = genreList.map { it.name.orEmpty() },
+			request = { genre ->
 				GetItemsRequest(
 					parentId = folder.id,
 					includeItemTypes = setOf(itemType),
-					studios = setOf(studio),
+					genres = setOf(genre),
 					recursive = true,
 					limit = 0,
 				)
