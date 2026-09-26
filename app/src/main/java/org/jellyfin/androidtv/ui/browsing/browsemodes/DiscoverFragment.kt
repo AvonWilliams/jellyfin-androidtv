@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,7 @@ import org.jellyfin.androidtv.data.repository.ItemRepository
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.ui.composable.item.ItemCard
+import org.jellyfin.androidtv.ui.composable.item.RankBadge
 import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
@@ -174,6 +176,16 @@ private fun DiscoverCard(
 					aspectRatio = aspectRatio,
 					modifier = Modifier.fillMaxSize(),
 				)
+			},
+			overlay = {
+				item.indexNumber?.takeIf { it > 0 }?.let { rank ->
+					RankBadge(
+						rank = rank,
+						modifier = Modifier
+							.align(Alignment.TopStart)
+							.padding(4.dp),
+					)
+				}
 			},
 		)
 	}
