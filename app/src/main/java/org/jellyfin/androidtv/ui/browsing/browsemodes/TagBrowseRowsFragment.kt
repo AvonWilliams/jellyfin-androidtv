@@ -153,6 +153,8 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			SortMode.RANDOM -> interleavedShuffle(rawTags, tagCounts)
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()
+			SortMode.MOST -> rawTags.sortedByDescending { tagCounts[it] ?: 0 }
+			SortMode.FEWEST -> rawTags.sortedBy { tagCounts[it] ?: 0 }
 		}
 
 		val cardPresenter = CardPresenter(false, CARD_HEIGHT)

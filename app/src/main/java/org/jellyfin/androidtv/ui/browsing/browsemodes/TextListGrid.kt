@@ -10,15 +10,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +43,12 @@ internal fun TextListGrid(
 	onItemClick: (BaseItemDto) -> Unit,
 ) {
 	val gridState = rememberLazyGridState()
+	val firstItemFocusRequester = remember { FocusRequester() }
+
+	// Focus the first row so a single DPAD center press activates it immediately.
+	LaunchedEffect(items.isNotEmpty()) {
+		if (items.isNotEmpty()) firstItemFocusRequester.requestFocus()
+	}
 
 	Column(modifier = Modifier.fillMaxSize()) {
 		Text(
@@ -54,21 +63,30 @@ internal fun TextListGrid(
 			state = gridState,
 			modifier = Modifier.fillMaxSize(),
 		) {
-			items(items, key = { it.originalTitle ?: it.name ?: it.id.toString() }) { item ->
-				TextRow(item.name.orEmpty()) { onItemClick(item) }
+			itemsIndexed(items, key = { _, item -> item.originalTitle ?: item.name ?: item.id.toString() }) { index, item ->
+				TextRow(
+					item.name.orEmpty(),
+					focusRequester = if (index == 0) firstItemFocusRequester else null,
+					onClick = { onItemClick(item) },
+				)
 			}
 		}
 	}
 }
 
 @Composable
-private fun TextRow(label: String, onClick: () -> Unit) {
+private fun TextRow(
+	label: String,
+	focusRequester: FocusRequester?,
+	onClick: () -> Unit,
+) {
 	var focused by remember { mutableStateOf(false) }
 
 	Box(
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(4.dp)
+			.then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
 			.onFocusChanged { focused = it.isFocused }
 			.focusable()
 			.clickable(onClick = onClick)

@@ -140,6 +140,8 @@ class TagPickerFragment : Fragment() {
 			SortMode.RANDOM -> interleavedShuffle(rawTags, tagCounts)
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()
+			SortMode.MOST -> rawTags.sortedByDescending { tagCounts[it] ?: 0 }
+			SortMode.FEWEST -> rawTags.sortedBy { tagCounts[it] ?: 0 }
 		}
 
 		sorted.forEach { tagName ->
@@ -197,12 +199,16 @@ class TagPickerFragment : Fragment() {
 enum class SortMode(val label: String) {
 	RANDOM("Random"),
 	A_Z("A–Z"),
-	Z_A("Z–A");
+	Z_A("Z–A"),
+	MOST("Most items"),
+	FEWEST("Fewest items");
 
 	fun next(): SortMode = when (this) {
 		RANDOM -> A_Z
 		A_Z -> Z_A
-		Z_A -> RANDOM
+		Z_A -> MOST
+		MOST -> FEWEST
+		FEWEST -> RANDOM
 	}
 }
 

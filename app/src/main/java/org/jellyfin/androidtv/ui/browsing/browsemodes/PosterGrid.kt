@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -63,6 +65,12 @@ internal fun PosterGrid(
 	val imageHelper = remember(api) { ImageHelper(api) }
 	val gridState = rememberLazyGridState()
 	var focusedItem by remember { mutableStateOf<BaseItemDto?>(null) }
+	val firstItemFocusRequester = remember { FocusRequester() }
+
+	// Focus the first card so a single DPAD center press activates it immediately.
+	LaunchedEffect(items.isNotEmpty()) {
+		if (items.isNotEmpty()) firstItemFocusRequester.requestFocus()
+	}
 
 	// Prefetch posters ahead of the scroll so images are ready when they come into view.
 	LaunchedEffect(gridState) {
@@ -100,12 +108,13 @@ internal fun PosterGrid(
 				modifier = Modifier.fillMaxSize(),
 				verticalArrangement = Arrangement.spacedBy(4.dp),
 			) {
-				items(items) { item ->
+				itemsIndexed(items) { index, item ->
 					PosterCard(
 						item,
 						imageHelper,
 						api,
 						showRankBadge,
+						focusRequester = if (index == 0) firstItemFocusRequester else null,
 						onFocus = { focusedItem = item },
 						onClick = { onItemClick(item) },
 					)
@@ -134,6 +143,7 @@ private fun PosterCard(
 	imageHelper: ImageHelper,
 	api: ApiClient,
 	showRankBadge: Boolean,
+	focusRequester: FocusRequester?,
 	onFocus: () -> Unit,
 	onClick: () -> Unit,
 ) {
@@ -146,6 +156,7 @@ private fun PosterCard(
 		modifier = Modifier
 			.aspectRatio(2f / 3f)
 			.padding(4.dp)
+			.then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
 			.onFocusChanged { focusState ->
 				focused = focusState.isFocused
 				if (focusState.isFocused) onFocus()

@@ -136,6 +136,8 @@ class AgeRatingPickerFragment : Fragment() {
 			SortMode.RANDOM -> interleavedShuffle(rawRatings, ratingCounts)
 			SortMode.A_Z -> rawRatings.sorted()
 			SortMode.Z_A -> rawRatings.sortedDescending()
+			SortMode.MOST -> rawRatings.sortedByDescending { ratingCounts[it] ?: 0 }
+			SortMode.FEWEST -> rawRatings.sortedBy { ratingCounts[it] ?: 0 }
 		}
 
 		sorted.forEach { rating ->
