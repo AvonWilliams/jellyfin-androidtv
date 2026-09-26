@@ -54,7 +54,7 @@ internal fun TextListGrid(
 			state = gridState,
 			modifier = Modifier.fillMaxSize(),
 		) {
-			items(items) { item ->
+			items(items, key = { it.originalTitle ?: it.name ?: it.id.toString() }) { item ->
 				TextRow(item.name.orEmpty()) { onItemClick(item) }
 			}
 		}

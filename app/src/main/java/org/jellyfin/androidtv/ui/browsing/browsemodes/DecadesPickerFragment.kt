@@ -77,7 +77,7 @@ class DecadesPickerFragment : Fragment() {
 	}
 
 	private fun onClick(item: BaseItemDto) {
-		val decadeLabel = item.name ?: return
+		val decadeLabel = item.originalTitle ?: item.name ?: return
 		val decadeStartYear = decadeLabel.removeSuffix("s").toIntOrNull() ?: return
 		navigationRepository.navigate(
 			Destinations.libraryByDecadeItems(folder, decadeStartYear, itemType.serialName)
@@ -106,6 +106,7 @@ class DecadesPickerFragment : Fragment() {
 			val display = if (count != null) "$label ($count)" else label
 			val json = buildJsonObject {
 				put("Name", display)
+				put("OriginalTitle", label)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()

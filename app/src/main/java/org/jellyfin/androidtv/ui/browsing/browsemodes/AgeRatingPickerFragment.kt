@@ -88,7 +88,7 @@ class AgeRatingPickerFragment : Fragment() {
 			"__reshuffle__" -> refreshGrid()
 
 			else -> {
-				val rating = item.name ?: return
+				val rating = item.originalTitle ?: item.name ?: return
 				navigationRepository.navigate(
 					Destinations.libraryByAgeRatingItems(folder, rating, itemType.serialName)
 				)
@@ -143,6 +143,7 @@ class AgeRatingPickerFragment : Fragment() {
 			val display = if (count != null) "$rating ($count)" else rating
 			val json = buildJsonObject {
 				put("Name", display)
+				put("OriginalTitle", rating)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
