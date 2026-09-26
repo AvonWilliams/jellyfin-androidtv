@@ -4,22 +4,31 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +39,7 @@ import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.data.repository.ItemRepository
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
+import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.ui.composable.item.ItemCard
 import org.jellyfin.androidtv.ui.composable.item.RankBadge
@@ -68,6 +78,7 @@ class DiscoverFragment : Fragment() {
 
 	private lateinit var folder: BaseItemDto
 	private lateinit var mode: BrowseMode
+	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,6 +86,9 @@ class DiscoverFragment : Fragment() {
 
 		folder = Json.decodeFromString<BaseItemDto>(requireArguments().getString(Extras.Folder)!!)
 		mode = BrowseMode.entries.first { it.key == requireArguments().getString(Extras.BrowseMode) }
+
+		val label = getBrowseModes(folder.collectionType)?.first { it.mode == mode }?.label
+		title.value = label?.let { "${folder.name} - ${getString(it)}" } ?: folder.name.orEmpty()
 	}
 
 	override fun onCreateView(
@@ -84,7 +98,7 @@ class DiscoverFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				DiscoverGrid(items.value) { item -> launch(item) }
+				DiscoverGrid(title.value, items.value) { item -> launch(item) }
 			}
 		}
 	}
@@ -135,16 +149,28 @@ class DiscoverFragment : Fragment() {
 }
 
 @Composable
-private fun DiscoverGrid(items: List<BaseItemDto>, onItemClick: (BaseItemDto) -> Unit) {
+private fun DiscoverGrid(title: String, items: List<BaseItemDto>, onItemClick: (BaseItemDto) -> Unit) {
 	val api = koinInject<ApiClient>()
 	val imageHelper = remember(api) { ImageHelper(api) }
+	val gridState = rememberLazyGridState()
 
-	LazyVerticalGrid(
-		columns = GridCells.Fixed(DiscoverFragment.COLUMNS),
-		modifier = Modifier.fillMaxSize(),
-	) {
-		items(items) { item ->
-			DiscoverCard(item, imageHelper, api) { onItemClick(item) }
+	Column(modifier = Modifier.fillMaxSize()) {
+		Text(
+			text = title,
+			fontSize = 24.sp,
+			color = Color.White,
+			modifier = Modifier.padding(16.dp),
+		)
+
+		LazyVerticalGrid(
+			columns = GridCells.Fixed(DiscoverFragment.COLUMNS),
+			state = gridState,
+			modifier = Modifier.fillMaxSize(),
+			verticalArrangement = Arrangement.spacedBy(4.dp),
+		) {
+			items(items) { item ->
+				DiscoverCard(item, imageHelper, api) { onItemClick(item) }
+			}
 		}
 	}
 }
@@ -156,6 +182,7 @@ private fun DiscoverCard(
 	api: ApiClient,
 	onClick: () -> Unit,
 ) {
+	var focused by remember { mutableStateOf(false) }
 	val url = remember(item) { imageHelper.getPrimaryImageUrl(item, width = 200, height = 300) }
 	val blurHash = item.itemImages[ImageType.PRIMARY]?.blurHash
 	val aspectRatio = item.primaryImageAspectRatio?.toFloat() ?: (2f / 3f)
@@ -164,8 +191,10 @@ private fun DiscoverCard(
 		modifier = Modifier
 			.aspectRatio(2f / 3f)
 			.padding(4.dp)
+			.onFocusChanged { focused = it.isFocused }
 			.focusable()
-			.clickable(onClick = onClick),
+			.clickable(onClick = onClick)
+			.then(if (focused) Modifier.border(3.dp, Color.White) else Modifier),
 	) {
 		ItemCard(
 			modifier = Modifier.fillMaxSize(),
