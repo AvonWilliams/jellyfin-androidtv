@@ -42,7 +42,7 @@ class AgeRatingPickerFragment : Fragment() {
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var sortMode = SortMode.RANDOM
 	private var rawRatings: List<String> = emptyList()
-	private var ratingCounts: Map<String, Int> = emptyMap()
+	private val ratingCounts = mutableStateOf<Map<String, Int>>(emptyMap())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -68,7 +68,7 @@ class AgeRatingPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value) { item -> onClick(item) }
+				TextListGrid(title.value, items.value, counts = ratingCounts.value) { item -> onClick(item) }
 			}
 		}
 	}
@@ -132,19 +132,18 @@ class AgeRatingPickerFragment : Fragment() {
 			list.add(Json.decodeFromString<BaseItemDto>(shuffleJson))
 		}
 
+		val counts = ratingCounts.value
 		val sorted = when (sortMode) {
-			SortMode.RANDOM -> interleavedShuffle(rawRatings, ratingCounts)
+			SortMode.RANDOM -> interleavedShuffle(rawRatings, counts)
 			SortMode.A_Z -> rawRatings.sorted()
 			SortMode.Z_A -> rawRatings.sortedDescending()
-			SortMode.MOST -> rawRatings.sortedByDescending { ratingCounts[it] ?: 0 }
-			SortMode.FEWEST -> rawRatings.sortedBy { ratingCounts[it] ?: 0 }
+			SortMode.MOST -> rawRatings.sortedByDescending { counts[it] ?: 0 }
+			SortMode.FEWEST -> rawRatings.sortedBy { counts[it] ?: 0 }
 		}
 
 		sorted.forEach { rating ->
-			val count = ratingCounts[rating]
-			val display = if (count != null) "$rating ($count)" else rating
 			val json = buildJsonObject {
-				put("Name", display)
+				put("Name", rating)
 				put("OriginalTitle", rating)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
@@ -170,7 +169,7 @@ class AgeRatingPickerFragment : Fragment() {
 	}
 
 	private suspend fun fetchRatingCounts() {
-		ratingCounts = fetchItemCounts(
+		ratingCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "rating"),
 			values = rawRatings,
@@ -184,6 +183,5 @@ class AgeRatingPickerFragment : Fragment() {
 				)
 			},
 		)
-		if (isAdded) withContext(Dispatchers.Main) { refreshGrid() }
 	}
 }

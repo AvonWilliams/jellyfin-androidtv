@@ -38,7 +38,7 @@ class GenrePickerFragment : Fragment() {
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var genreList: List<BaseItemDto> = emptyList()
-	private var genreCounts: Map<String, Int> = emptyMap()
+	private val genreCounts = mutableStateOf<Map<String, Int>>(emptyMap())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -64,7 +64,7 @@ class GenrePickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value) { item -> onClick(item) }
+				TextListGrid(title.value, items.value, counts = genreCounts.value) { item -> onClick(item) }
 			}
 		}
 	}
@@ -104,10 +104,8 @@ class GenrePickerFragment : Fragment() {
 	private fun rebuildItems() {
 		items.value = genreList.map { genre ->
 			val name = genre.name.orEmpty()
-			val count = genreCounts[name]
-			val display = if (count != null) "$name ($count)" else name
 			val json = buildJsonObject {
-				put("Name", display)
+				put("Name", name)
 				put("OriginalTitle", name)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
@@ -117,7 +115,7 @@ class GenrePickerFragment : Fragment() {
 	}
 
 	private suspend fun fetchGenreCounts() {
-		genreCounts = fetchItemCounts(
+		genreCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "genre"),
 			values = genreList.map { it.name.orEmpty() },
@@ -131,6 +129,5 @@ class GenrePickerFragment : Fragment() {
 				)
 			},
 		)
-		if (isAdded) withContext(Dispatchers.Main) { rebuildItems() }
 	}
 }

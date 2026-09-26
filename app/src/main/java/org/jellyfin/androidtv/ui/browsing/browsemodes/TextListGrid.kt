@@ -2,7 +2,6 @@ package org.jellyfin.androidtv.ui.browsing.browsemodes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,17 +34,20 @@ const val TEXT_LIST_COLUMNS = 3
 /**
  * A list of selectable text rows (no pictures), shown as a narrow grid.
  * Used for pickers where each choice is just a label.
+ *
+ * Item counts are kept separate from the items so their arrival does not rebuild the list
+ * (which would drop focus and require a second click).
  */
 @Composable
 internal fun TextListGrid(
 	title: String,
 	items: List<BaseItemDto>,
+	counts: Map<String, Int> = emptyMap(),
 	onItemClick: (BaseItemDto) -> Unit,
 ) {
 	val gridState = rememberLazyGridState()
 	val firstItemFocusRequester = remember { FocusRequester() }
 
-	// Focus the first row so a single DPAD center press activates it immediately.
 	LaunchedEffect(items.isNotEmpty()) {
 		if (items.isNotEmpty()) firstItemFocusRequester.requestFocus()
 	}
@@ -64,8 +66,11 @@ internal fun TextListGrid(
 			modifier = Modifier.fillMaxSize(),
 		) {
 			itemsIndexed(items, key = { _, item -> item.originalTitle ?: item.name ?: item.id.toString() }) { index, item ->
+				val key = item.originalTitle ?: item.name.orEmpty()
+				val count = counts[key]
+				val label = if (count != null) "${item.name.orEmpty()} ($count)" else item.name.orEmpty()
 				TextRow(
-					item.name.orEmpty(),
+					label,
 					focusRequester = if (index == 0) firstItemFocusRequester else null,
 					onClick = { onItemClick(item) },
 				)
@@ -88,7 +93,6 @@ private fun TextRow(
 			.padding(4.dp)
 			.then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
 			.onFocusChanged { focused = it.isFocused }
-			.focusable()
 			.clickable(onClick = onClick)
 			.background(if (focused) Color(0x33FFFFFF) else Color.Transparent),
 		contentAlignment = Alignment.Center,

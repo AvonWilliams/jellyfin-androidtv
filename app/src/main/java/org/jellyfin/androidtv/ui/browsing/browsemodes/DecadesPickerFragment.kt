@@ -40,7 +40,7 @@ class DecadesPickerFragment : Fragment() {
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var decadeList: List<Int> = emptyList()
-	private var decadeCounts: Map<String, Int> = emptyMap()
+	private val decadeCounts = mutableStateOf<Map<String, Int>>(emptyMap())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -66,7 +66,7 @@ class DecadesPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value) { item -> onClick(item) }
+				TextListGrid(title.value, items.value, counts = decadeCounts.value) { item -> onClick(item) }
 			}
 		}
 	}
@@ -102,10 +102,8 @@ class DecadesPickerFragment : Fragment() {
 	private fun rebuildItems() {
 		items.value = decadeList.map { decadeStart ->
 			val label = "${decadeStart}s"
-			val count = decadeCounts[label]
-			val display = if (count != null) "$label ($count)" else label
 			val json = buildJsonObject {
-				put("Name", display)
+				put("Name", label)
 				put("OriginalTitle", label)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
@@ -115,7 +113,7 @@ class DecadesPickerFragment : Fragment() {
 	}
 
 	private suspend fun fetchDecadeCounts() {
-		decadeCounts = fetchItemCounts(
+		decadeCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "decade"),
 			values = decadeList.map { "${it}s" },
@@ -130,7 +128,6 @@ class DecadesPickerFragment : Fragment() {
 				)
 			},
 		)
-		if (isAdded) withContext(Dispatchers.Main) { rebuildItems() }
 	}
 
 	private suspend fun fetchDecades(): List<Int> {

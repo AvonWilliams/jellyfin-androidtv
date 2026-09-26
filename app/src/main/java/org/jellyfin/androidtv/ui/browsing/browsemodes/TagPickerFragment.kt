@@ -43,7 +43,7 @@ class TagPickerFragment : Fragment() {
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var sortMode = SortMode.RANDOM
 	private var rawTags: List<String> = emptyList()
-	private var tagCounts: Map<String, Int> = emptyMap()
+	private val tagCounts = mutableStateOf<Map<String, Int>>(emptyMap())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -67,7 +67,7 @@ class TagPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value) { item -> onClick(item) }
+				TextListGrid(title.value, items.value, counts = tagCounts.value) { item -> onClick(item) }
 			}
 		}
 	}
@@ -136,19 +136,18 @@ class TagPickerFragment : Fragment() {
 			list.add(Json.decodeFromString<BaseItemDto>(shuffleJson))
 		}
 
+		val counts = tagCounts.value
 		val sorted = when (sortMode) {
-			SortMode.RANDOM -> interleavedShuffle(rawTags, tagCounts)
+			SortMode.RANDOM -> interleavedShuffle(rawTags, counts)
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()
-			SortMode.MOST -> rawTags.sortedByDescending { tagCounts[it] ?: 0 }
-			SortMode.FEWEST -> rawTags.sortedBy { tagCounts[it] ?: 0 }
+			SortMode.MOST -> rawTags.sortedByDescending { counts[it] ?: 0 }
+			SortMode.FEWEST -> rawTags.sortedBy { counts[it] ?: 0 }
 		}
 
 		sorted.forEach { tagName ->
-			val count = tagCounts[tagName]
-			val display = if (count != null) "${tagName.toTitleCase()} ($count)" else tagName.toTitleCase()
 			val json = buildJsonObject {
-				put("Name", display)
+				put("Name", tagName.toTitleCase())
 				put("OriginalTitle", tagName)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
@@ -178,7 +177,7 @@ class TagPickerFragment : Fragment() {
 
 	/** Fetches per-tag item counts for Most/Fewest items sorting. */
 	private suspend fun fetchTagCounts() {
-		tagCounts = fetchItemCounts(
+		tagCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "tag:${mode.key}"),
 			values = rawTags,
@@ -192,7 +191,6 @@ class TagPickerFragment : Fragment() {
 				)
 			},
 		)
-		if (isAdded) withContext(Dispatchers.Main) { refreshGrid() }
 	}
 }
 

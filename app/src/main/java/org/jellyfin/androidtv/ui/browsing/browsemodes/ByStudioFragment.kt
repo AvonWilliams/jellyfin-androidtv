@@ -43,7 +43,7 @@ class ByStudioFragment : Fragment() {
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var studioList: List<BaseItemDto> = emptyList()
-	private var studioCounts: Map<String, Int> = emptyMap()
+	private val studioCounts = mutableStateOf<Map<String, Int>>(emptyMap())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -67,7 +67,7 @@ class ByStudioFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value) { item -> onClick(item) }
+				TextListGrid(title.value, items.value, counts = studioCounts.value) { item -> onClick(item) }
 			}
 		}
 	}
@@ -104,10 +104,8 @@ class ByStudioFragment : Fragment() {
 	private fun rebuildItems() {
 		items.value = studioList.map { studio ->
 			val name = studio.name.orEmpty()
-			val count = studioCounts[name]
-			val display = if (count != null) "$name ($count)" else name
 			val json = buildJsonObject {
-				put("Name", display)
+				put("Name", name)
 				put("OriginalTitle", name)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
@@ -117,7 +115,7 @@ class ByStudioFragment : Fragment() {
 	}
 
 	private suspend fun fetchStudioCounts() {
-		studioCounts = fetchItemCounts(
+		studioCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "studio"),
 			values = studioList.map { it.name.orEmpty() },
@@ -131,6 +129,5 @@ class ByStudioFragment : Fragment() {
 				)
 			},
 		)
-		if (isAdded) withContext(Dispatchers.Main) { rebuildItems() }
 	}
 }
