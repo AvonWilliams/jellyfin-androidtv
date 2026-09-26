@@ -4,6 +4,8 @@ import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -14,6 +16,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.core.graphics.drawable.toBitmap
 import coil3.ImageLoader
 import coil3.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.util.BlurHashDecoder
 import org.koin.compose.koinInject
 import kotlin.math.round
@@ -43,10 +47,11 @@ fun AsyncImage(
 		remember(drawable) { BitmapPainter(drawable.toBitmap().asImageBitmap()) }
 	}
 
-	val blurHashPlaceholder = blurHash?.let { hash ->
+	val blurHashPlaceholder by produceState<Painter?>(initialValue = null, blurHash, aspectRatio, blurHashResolution) {
+		val hash = blurHash ?: return@produceState
 		val width = if (aspectRatio > 1) round(blurHashResolution * aspectRatio).toInt() else blurHashResolution
 		val height = if (aspectRatio >= 1) blurHashResolution else round(blurHashResolution / aspectRatio).toInt()
-		remember(hash, width, height) {
+		value = withContext(Dispatchers.Default) {
 			BlurHashDecoder.decode(hash, width, height)?.asImageBitmap()?.let(::BitmapPainter)
 		}
 	}
