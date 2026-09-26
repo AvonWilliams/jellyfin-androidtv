@@ -1,9 +1,12 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
 import android.os.Bundle
-import androidx.leanback.app.VerticalGridSupportFragment
-import androidx.leanback.widget.OnItemViewClickedListener
-import androidx.leanback.widget.VerticalGridPresenter
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,11 +16,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
-import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
+import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
-import org.jellyfin.androidtv.ui.presentation.CardPresenter
-import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.get
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -27,19 +28,16 @@ import org.jellyfin.sdk.model.api.QueryFiltersLegacy
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-class DecadesPickerFragment : VerticalGridSupportFragment() {
-	private companion object {
-		const val COLUMNS = 6
-		const val CARD_HEIGHT = 200
-	}
-
+/** The decades a library spans, as a selectable text list. */
+class DecadesPickerFragment : Fragment() {
 	private val apiClient by inject<ApiClient>()
 	private val navigationRepository by inject<NavigationRepository>()
 	private val userRepository by inject<UserRepository>()
 
 	private lateinit var folder: BaseItemDto
 	private lateinit var itemType: BaseItemKind
-	private lateinit var decadesAdapter: MutableObjectAdapter<Any>
+	private val title = mutableStateOf("")
+	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -51,28 +49,36 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		title = getBrowseModes(folder.collectionType)
+		title.value = getBrowseModes(folder.collectionType)
 			?.firstOrNull { it.mode == BrowseMode.DECADES }
 			?.label
 			?.let { getString(it) }
 			?: "Decades"
+	}
 
-		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
-
-		decadesAdapter = MutableObjectAdapter(CardPresenter(true, CARD_HEIGHT))
-		adapter = decadesAdapter
-
-		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			val decadeLabel = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
-				?: return@OnItemViewClickedListener
-			val decadeStartYear = decadeLabel.removeSuffix("s").toIntOrNull()
-				?: return@OnItemViewClickedListener
-			navigationRepository.navigate(
-				Destinations.libraryByDecadeItems(folder, decadeStartYear, itemType.serialName)
-			)
+	override fun onCreateView(
+		inflater: LayoutInflater,
+		container: ViewGroup?,
+		savedInstanceState: Bundle?,
+	): View = ComposeView(requireContext()).apply {
+		setContent {
+			JellyfinTheme {
+				TextListGrid(title.value, items.value) { item -> onClick(item) }
+			}
 		}
+	}
 
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
 		load()
+	}
+
+	private fun onClick(item: BaseItemDto) {
+		val decadeLabel = item.name ?: return
+		val decadeStartYear = decadeLabel.removeSuffix("s").toIntOrNull() ?: return
+		navigationRepository.navigate(
+			Destinations.libraryByDecadeItems(folder, decadeStartYear, itemType.serialName)
+		)
 	}
 
 	private fun load() = lifecycleScope.launch {
@@ -85,15 +91,14 @@ class DecadesPickerFragment : VerticalGridSupportFragment() {
 
 		if (!isAdded) return@launch
 
-		decades.forEach { decadeStart ->
+		items.value = decades.map { decadeStart ->
 			val label = "${decadeStart}s"
 			val json = buildJsonObject {
 				put("Name", label)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			val item = Json.decodeFromString<BaseItemDto>(json)
-			decadesAdapter.add(BaseItemDtoBaseRowItem(item))
+			Json.decodeFromString<BaseItemDto>(json)
 		}
 	}
 

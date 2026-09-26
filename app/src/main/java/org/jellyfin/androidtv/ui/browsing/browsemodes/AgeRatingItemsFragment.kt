@@ -1,10 +1,12 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
 import android.os.Bundle
-import androidx.leanback.app.VerticalGridSupportFragment
-import androidx.leanback.widget.OnItemViewClickedListener
-import androidx.leanback.widget.FocusHighlight
-import androidx.leanback.widget.VerticalGridPresenter
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -12,10 +14,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.data.repository.ItemRepository
+import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
-import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
-import org.jellyfin.androidtv.ui.presentation.CardPresenter
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.itemsApi
@@ -29,17 +30,12 @@ import timber.log.Timber
 
 /**
  * The items matching a single official content rating (e.g. "PG-13", "TV-MA"),
- * shown as a poster grid.
+ * shown as a Compose poster grid.
  *
- * Rating selection from [AgeRatingPickerFragment] navigates here. The items are retrieved
- * from the standard GET /Items endpoint with an officialRatings filter.
- *
- * Pattern follows [TagItemsFragment].
+ * Rating selection from [AgeRatingPickerFragment] navigates here.
  */
-class AgeRatingItemsFragment : VerticalGridSupportFragment() {
+class AgeRatingItemsFragment : Fragment() {
 	private companion object {
-		const val COLUMNS = 7
-		const val CARD_HEIGHT = 150
 		const val LIMIT = 200
 	}
 
@@ -49,7 +45,8 @@ class AgeRatingItemsFragment : VerticalGridSupportFragment() {
 	private lateinit var folder: BaseItemDto
 	private lateinit var rating: String
 	private lateinit var itemType: BaseItemKind
-	private lateinit var itemsAdapter: MutableObjectAdapter<Any>
+	private val title = mutableStateOf("")
+	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -59,22 +56,32 @@ class AgeRatingItemsFragment : VerticalGridSupportFragment() {
 		itemType = BaseItemKind.fromNameOrNull(requireArguments().getString(Extras.IncludeType)!!)
 			?: BaseItemKind.MOVIE
 
-		title = "${folder.name} - $rating"
+		title.value = "${folder.name} - $rating"
+	}
 
-		setGridPresenter(VerticalGridPresenter(FocusHighlight.ZOOM_FACTOR_LARGE, false).apply { numberOfColumns = COLUMNS; setShadowEnabled(false) })
-
-		itemsAdapter = MutableObjectAdapter(CardPresenter(false, CARD_HEIGHT))
-		adapter = itemsAdapter
-
-		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			if (item is BaseRowItem) itemLauncher.launch(item, itemsAdapter, requireContext())
+	override fun onCreateView(
+		inflater: LayoutInflater,
+		container: ViewGroup?,
+		savedInstanceState: Bundle?,
+	): View = ComposeView(requireContext()).apply {
+		setContent {
+			JellyfinTheme {
+				PosterGrid(title.value, items.value, showRankBadge = false) { item -> launch(item) }
+			}
 		}
+	}
 
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
 		load()
 	}
 
+	private fun launch(item: BaseItemDto) {
+		itemLauncher.launch(BaseItemDtoBaseRowItem(item), MutableObjectAdapter<Any>(), requireContext())
+	}
+
 	private fun load() = lifecycleScope.launch {
-		val items = try {
+		val result = try {
 			withContext(Dispatchers.IO) {
 				apiClient.itemsApi.getItems(
 					GetItemsRequest(
@@ -96,6 +103,6 @@ class AgeRatingItemsFragment : VerticalGridSupportFragment() {
 
 		if (!isAdded) return@launch
 
-		items.orEmpty().forEach { itemsAdapter.add(BaseItemDtoBaseRowItem(it)) }
+		items.value = result.orEmpty()
 	}
 }

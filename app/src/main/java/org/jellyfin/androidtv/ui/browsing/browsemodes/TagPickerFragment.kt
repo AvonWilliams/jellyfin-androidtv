@@ -1,15 +1,12 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
-import android.graphics.Color
 import android.os.Bundle
-import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.leanback.app.VerticalGridSupportFragment
-import androidx.leanback.widget.OnItemViewClickedListener
-import androidx.leanback.widget.Presenter
-import androidx.leanback.widget.PresenterSelector
-import androidx.leanback.widget.VerticalGridPresenter
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,11 +16,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
-import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
+import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
-import org.jellyfin.androidtv.ui.presentation.CardPresenter
-import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.get
 import org.jellyfin.sdk.api.client.extensions.itemsApi
@@ -35,12 +30,8 @@ import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-class TagPickerFragment : VerticalGridSupportFragment() {
-	private companion object {
-		const val COLUMNS = 6
-		const val CARD_HEIGHT = 200
-	}
-
+/** The curated tags of a browse mode, as a selectable text list with sort options. */
+class TagPickerFragment : Fragment() {
 	private val apiClient by inject<ApiClient>()
 	private val navigationRepository by inject<NavigationRepository>()
 	private val userRepository by inject<UserRepository>()
@@ -48,7 +39,8 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	private lateinit var folder: BaseItemDto
 	private lateinit var mode: BrowseMode
 	private lateinit var itemType: BaseItemKind
-	private lateinit var tagsAdapter: MutableObjectAdapter<Any>
+	private val title = mutableStateOf("")
+	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var sortMode = SortMode.RANDOM
 	private var rawTags: List<String> = emptyList()
 	private var tagCounts: Map<String, Int> = emptyMap()
@@ -65,59 +57,44 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 		}
 
 		val label = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
-		title = label?.let { getString(it) } ?: mode.key
+		title.value = label?.let { getString(it) } ?: mode.key
+	}
 
-		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
-
-		val sortPresenter = object : Presenter() {
-			override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
-				val tv = TextView(parent.context).apply {
-					isFocusable = true
-					isFocusableInTouchMode = true
-					gravity = Gravity.CENTER
-					setTextColor(Color.WHITE)
-					textSize = 14f
-					setPadding(24, 10, 24, 10)
-				}
-				return object : ViewHolder(tv) {}
+	override fun onCreateView(
+		inflater: LayoutInflater,
+		container: ViewGroup?,
+		savedInstanceState: Bundle?,
+	): View = ComposeView(requireContext()).apply {
+		setContent {
+			JellyfinTheme {
+				TextListGrid(title.value, items.value) { item -> onClick(item) }
 			}
-			override fun onBindViewHolder(vh: Presenter.ViewHolder, item: Any?) {
-				(vh.view as TextView).text = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
-			}
-			override fun onUnbindViewHolder(vh: Presenter.ViewHolder) {}
 		}
-		val tagPresenter = CardPresenter(true, CARD_HEIGHT)
-		tagsAdapter = MutableObjectAdapter(object : PresenterSelector() {
-			override fun getPresenter(item: Any?): Presenter {
-				val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem
-				return if (baseItem?.originalTitle == "__sort__") sortPresenter else tagPresenter
-			}
-		})
-		adapter = tagsAdapter
+	}
 
-		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
-
-			// Sort button
-			if (baseItem.originalTitle == "__sort__") {
-				sortMode = sortMode.next()
-				refreshGrid()
-				return@OnItemViewClickedListener
-			}
-			// Reshuffle button
-			if (baseItem.originalTitle == "__reshuffle__") {
-				refreshGrid()
-				return@OnItemViewClickedListener
-			}
-
-			// Tag tile — use originalTitle (raw tag) for filtering
-			val tag = baseItem.originalTitle ?: baseItem.name ?: return@OnItemViewClickedListener
-			navigationRepository.navigate(
-				Destinations.libraryByTagItems(folder, tag, itemType.serialName)
-			)
-		}
-
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
 		load()
+	}
+
+	private fun onClick(item: BaseItemDto) {
+		// Sort button
+		if (item.originalTitle == "__sort__") {
+			sortMode = sortMode.next()
+			refreshGrid()
+			return
+		}
+		// Reshuffle button
+		if (item.originalTitle == "__reshuffle__") {
+			refreshGrid()
+			return
+		}
+
+		// Tag row — use originalTitle (raw tag) for filtering
+		val tag = item.originalTitle ?: item.name ?: return
+		navigationRepository.navigate(
+			Destinations.libraryByTagItems(folder, tag, itemType.serialName)
+		)
 	}
 
 	private fun load() = lifecycleScope.launch {
@@ -137,16 +114,16 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 	}
 
 	private fun refreshGrid() {
-		tagsAdapter.clear()
+		val list = mutableListOf<BaseItemDto>()
 
-		// Sort toggle tile
+		// Sort toggle row
 		val sortJson = buildJsonObject {
 			put("Name", " Sort: ${sortMode.label}")
 			put("OriginalTitle", "__sort__")
 			put("Id", java.util.UUID.randomUUID().toString())
 			put("Type", "Folder")
 		}.toString()
-		tagsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson)))
+		list.add(Json.decodeFromString<BaseItemDto>(sortJson))
 
 		// Reshuffle button (only in Random mode)
 		if (sortMode == SortMode.RANDOM) {
@@ -156,7 +133,7 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			tagsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(shuffleJson)))
+			list.add(Json.decodeFromString<BaseItemDto>(shuffleJson))
 		}
 
 		val sorted = when (sortMode) {
@@ -172,8 +149,10 @@ class TagPickerFragment : VerticalGridSupportFragment() {
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			tagsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString(json)))
+			list.add(Json.decodeFromString<BaseItemDto>(json))
 		}
+
+		items.value = list
 	}
 
 	private suspend fun fetchMatchingTags(): List<String> {

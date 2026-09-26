@@ -1,10 +1,12 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
 import android.os.Bundle
-import androidx.leanback.app.VerticalGridSupportFragment
-import androidx.leanback.widget.OnItemViewClickedListener
-import androidx.leanback.widget.FocusHighlight
-import androidx.leanback.widget.VerticalGridPresenter
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -12,10 +14,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.data.repository.ItemRepository
+import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
-import org.jellyfin.androidtv.ui.itemhandling.BaseRowItem
 import org.jellyfin.androidtv.ui.itemhandling.ItemLauncher
-import org.jellyfin.androidtv.ui.presentation.CardPresenter
 import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.itemsApi
@@ -27,18 +28,14 @@ import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-/** The items a single studio is credited on, within one library. */
-class StudioItemsFragment : VerticalGridSupportFragment() {
-	private companion object {
-		const val COLUMNS = 7
-		const val CARD_HEIGHT = 150
-	}
-
+/** The items a single studio is credited on, within one library, as a Compose poster grid. */
+class StudioItemsFragment : Fragment() {
 	private val apiClient by inject<ApiClient>()
 	private val itemLauncher by inject<ItemLauncher>()
 
 	private lateinit var folder: BaseItemDto
-	private lateinit var itemsAdapter: MutableObjectAdapter<Any>
+	private val title = mutableStateOf("")
+	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -46,18 +43,24 @@ class StudioItemsFragment : VerticalGridSupportFragment() {
 		folder = Json.decodeFromString<BaseItemDto>(requireArguments().getString(Extras.Folder)!!)
 		val studio = requireArguments().getString(Extras.Studio).orEmpty()
 
-		title = studio
-
-		setGridPresenter(VerticalGridPresenter(FocusHighlight.ZOOM_FACTOR_LARGE, false).apply { numberOfColumns = COLUMNS; setShadowEnabled(false) })
-
-		itemsAdapter = MutableObjectAdapter(CardPresenter(true, CARD_HEIGHT))
-		adapter = itemsAdapter
-
-		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			if (item is BaseRowItem) itemLauncher.launch(item, itemsAdapter, requireContext())
-		}
-
+		title.value = studio
 		load(studio)
+	}
+
+	override fun onCreateView(
+		inflater: LayoutInflater,
+		container: ViewGroup?,
+		savedInstanceState: Bundle?,
+	): View = ComposeView(requireContext()).apply {
+		setContent {
+			JellyfinTheme {
+				PosterGrid(title.value, items.value, showRankBadge = false) { item -> launch(item) }
+			}
+		}
+	}
+
+	private fun launch(item: BaseItemDto) {
+		itemLauncher.launch(BaseItemDtoBaseRowItem(item), MutableObjectAdapter<Any>(), requireContext())
 	}
 
 	private fun load(studio: String) = lifecycleScope.launch {
@@ -66,7 +69,7 @@ class StudioItemsFragment : VerticalGridSupportFragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		val items = try {
+		val result = try {
 			withContext(Dispatchers.IO) {
 				apiClient.itemsApi.getItems(
 					GetItemsRequest(
@@ -86,6 +89,6 @@ class StudioItemsFragment : VerticalGridSupportFragment() {
 
 		if (!isAdded) return@launch
 
-		items.forEach { itemsAdapter.add(BaseItemDtoBaseRowItem(it)) }
+		items.value = result
 	}
 }

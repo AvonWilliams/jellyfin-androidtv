@@ -1,15 +1,12 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
-import android.graphics.Color
 import android.os.Bundle
-import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.leanback.app.VerticalGridSupportFragment
-import androidx.leanback.widget.OnItemViewClickedListener
-import androidx.leanback.widget.Presenter
-import androidx.leanback.widget.PresenterSelector
-import androidx.leanback.widget.VerticalGridPresenter
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,11 +16,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
-import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
+import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
-import org.jellyfin.androidtv.ui.presentation.CardPresenter
-import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.get
 import org.jellyfin.sdk.api.client.extensions.itemsApi
@@ -35,19 +30,16 @@ import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-class AgeRatingPickerFragment : VerticalGridSupportFragment() {
-	private companion object {
-		const val COLUMNS = 6
-		const val CARD_HEIGHT = 200
-	}
-
+/** The official content ratings of a library, as a selectable text list with sort options. */
+class AgeRatingPickerFragment : Fragment() {
 	private val apiClient by inject<ApiClient>()
 	private val navigationRepository by inject<NavigationRepository>()
 	private val userRepository by inject<UserRepository>()
 
 	private lateinit var folder: BaseItemDto
 	private lateinit var itemType: BaseItemKind
-	private lateinit var ratingsAdapter: MutableObjectAdapter<Any>
+	private val title = mutableStateOf("")
+	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var sortMode = SortMode.RANDOM
 	private var rawRatings: List<String> = emptyList()
 	private var ratingCounts: Map<String, Int> = emptyMap()
@@ -62,60 +54,46 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		title = getBrowseModes(folder.collectionType)
+		title.value = getBrowseModes(folder.collectionType)
 			?.firstOrNull { it.mode == BrowseMode.AGE_RATING }
 			?.label
 			?.let { getString(it) }
 			?: "Age Rating"
+	}
 
-		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
-
-		val sortPresenter = object : Presenter() {
-			override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
-				val tv = TextView(parent.context).apply {
-					isFocusable = true
-					isFocusableInTouchMode = true
-					gravity = Gravity.CENTER
-					setTextColor(Color.WHITE)
-					textSize = 14f
-					setPadding(24, 10, 24, 10)
-				}
-				return object : ViewHolder(tv) {}
+	override fun onCreateView(
+		inflater: LayoutInflater,
+		container: ViewGroup?,
+		savedInstanceState: Bundle?,
+	): View = ComposeView(requireContext()).apply {
+		setContent {
+			JellyfinTheme {
+				TextListGrid(title.value, items.value) { item -> onClick(item) }
 			}
-			override fun onBindViewHolder(vh: Presenter.ViewHolder, item: Any?) {
-				(vh.view as TextView).text = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
-			}
-			override fun onUnbindViewHolder(vh: Presenter.ViewHolder) {}
 		}
-		val ratingPresenter = CardPresenter(true, CARD_HEIGHT)
-		ratingsAdapter = MutableObjectAdapter(object : PresenterSelector() {
-			override fun getPresenter(item: Any?): Presenter {
-				val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem
-				return if (baseItem?.originalTitle == "__sort__") sortPresenter else ratingPresenter
-			}
-		})
-		adapter = ratingsAdapter
+	}
 
-		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem ?: return@OnItemViewClickedListener
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+		load()
+	}
 
-			if (baseItem.originalTitle == "__sort__") {
+	private fun onClick(item: BaseItemDto) {
+		when (item.originalTitle) {
+			"__sort__" -> {
 				sortMode = sortMode.next()
 				refreshGrid()
-				return@OnItemViewClickedListener
-			}
-			if (baseItem.originalTitle == "__reshuffle__") {
-				refreshGrid()
-				return@OnItemViewClickedListener
 			}
 
-			val rating = baseItem.name ?: return@OnItemViewClickedListener
-			navigationRepository.navigate(
-				Destinations.libraryByAgeRatingItems(folder, rating, itemType.serialName)
-			)
+			"__reshuffle__" -> refreshGrid()
+
+			else -> {
+				val rating = item.name ?: return
+				navigationRepository.navigate(
+					Destinations.libraryByAgeRatingItems(folder, rating, itemType.serialName)
+				)
+			}
 		}
-
-		load()
 	}
 
 	private fun load() = lifecycleScope.launch {
@@ -134,7 +112,7 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 	}
 
 	private fun refreshGrid() {
-		ratingsAdapter.clear()
+		val list = mutableListOf<BaseItemDto>()
 
 		val sortJson = buildJsonObject {
 			put("Name", " Sort: ${sortMode.label}")
@@ -142,7 +120,7 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 			put("Id", java.util.UUID.randomUUID().toString())
 			put("Type", "Folder")
 		}.toString()
-		ratingsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson)))
+		list.add(Json.decodeFromString<BaseItemDto>(sortJson))
 
 		if (sortMode == SortMode.RANDOM) {
 			val shuffleJson = buildJsonObject {
@@ -151,7 +129,7 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			ratingsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(shuffleJson)))
+			list.add(Json.decodeFromString<BaseItemDto>(shuffleJson))
 		}
 
 		val sorted = when (sortMode) {
@@ -166,8 +144,10 @@ class AgeRatingPickerFragment : VerticalGridSupportFragment() {
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			ratingsAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString(json)))
+			list.add(Json.decodeFromString<BaseItemDto>(json))
 		}
+
+		items.value = list
 	}
 
 	private suspend fun fetchRatings(): List<String> {

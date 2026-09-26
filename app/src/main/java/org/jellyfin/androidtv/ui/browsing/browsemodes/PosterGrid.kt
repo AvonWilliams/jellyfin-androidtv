@@ -1,0 +1,142 @@
+package org.jellyfin.androidtv.ui.browsing.browsemodes
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import org.jellyfin.androidtv.ui.base.Text
+import org.jellyfin.androidtv.ui.composable.AsyncImage
+import org.jellyfin.androidtv.ui.composable.item.ItemCard
+import org.jellyfin.androidtv.ui.composable.item.RankBadge
+import org.jellyfin.androidtv.util.ImageHelper
+import org.jellyfin.androidtv.util.apiclient.itemImages
+import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.model.api.BaseItemDto
+import org.jellyfin.sdk.model.api.ImageType
+import org.koin.compose.koinInject
+
+const val POSTER_COLUMNS = 7
+
+/** A poster grid with a title header, rendered Compose-native (no Leanback). */
+@Composable
+internal fun PosterGrid(
+	title: String,
+	items: List<BaseItemDto>,
+	showRankBadge: Boolean,
+	onItemClick: (BaseItemDto) -> Unit,
+) {
+	val api = koinInject<ApiClient>()
+	val imageHelper = remember(api) { ImageHelper(api) }
+	val gridState = rememberLazyGridState()
+
+	Column(modifier = Modifier.fillMaxSize()) {
+		Text(
+			text = title,
+			fontSize = 24.sp,
+			color = Color.White,
+			modifier = Modifier.padding(16.dp),
+		)
+
+		LazyVerticalGrid(
+			columns = GridCells.Fixed(POSTER_COLUMNS),
+			state = gridState,
+			modifier = Modifier.fillMaxSize(),
+			verticalArrangement = Arrangement.spacedBy(4.dp),
+		) {
+			items(items) { item ->
+				PosterCard(item, imageHelper, api, showRankBadge) { onItemClick(item) }
+			}
+		}
+	}
+}
+
+@Composable
+private fun PosterCard(
+	item: BaseItemDto,
+	imageHelper: ImageHelper,
+	api: ApiClient,
+	showRankBadge: Boolean,
+	onClick: () -> Unit,
+) {
+	var focused by remember { mutableStateOf(false) }
+	val url = remember(item) { imageHelper.getPrimaryImageUrl(item, width = 200, height = 300) }
+	val blurHash = item.itemImages[ImageType.PRIMARY]?.blurHash
+	val aspectRatio = item.primaryImageAspectRatio?.toFloat() ?: (2f / 3f)
+
+	Box(
+		modifier = Modifier
+			.aspectRatio(2f / 3f)
+			.padding(4.dp)
+			.onFocusChanged { focused = it.isFocused }
+			.focusable()
+			.clickable(onClick = onClick)
+			.then(if (focused) Modifier.border(3.dp, Color.White) else Modifier),
+	) {
+		ItemCard(
+			modifier = Modifier.fillMaxSize(),
+			image = {
+				AsyncImage(
+					url = url,
+					blurHash = blurHash,
+					aspectRatio = aspectRatio,
+					modifier = Modifier.fillMaxSize(),
+				)
+			},
+			overlay = {
+				if (showRankBadge) {
+					item.indexNumber?.takeIf { it > 0 }?.let { rank ->
+						RankBadge(
+							rank = rank,
+							modifier = Modifier
+								.align(Alignment.TopStart)
+								.padding(4.dp),
+						)
+					}
+				}
+				item.name?.let { name ->
+					Box(
+						modifier = Modifier
+							.align(Alignment.BottomCenter)
+							.fillMaxWidth()
+							.background(Color(0x99000000))
+							.padding(horizontal = 8.dp, vertical = 4.dp),
+					) {
+						Text(
+							text = name,
+							fontSize = 12.sp,
+							color = Color.White,
+							maxLines = 1,
+							overflow = TextOverflow.Ellipsis,
+							textAlign = TextAlign.Center,
+							modifier = Modifier.fillMaxWidth(),
+						)
+					}
+				}
+			},
+		)
+	}
+}
