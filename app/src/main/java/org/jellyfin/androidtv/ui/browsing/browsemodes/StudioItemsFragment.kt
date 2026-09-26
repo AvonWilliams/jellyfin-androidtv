@@ -3,6 +3,7 @@ package org.jellyfin.androidtv.ui.browsing.browsemodes
 import android.os.Bundle
 import androidx.leanback.app.VerticalGridSupportFragment
 import androidx.leanback.widget.OnItemViewClickedListener
+import androidx.leanback.widget.FocusHighlight
 import androidx.leanback.widget.VerticalGridPresenter
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +48,7 @@ class StudioItemsFragment : VerticalGridSupportFragment() {
 
 		title = studio
 
-		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
+		setGridPresenter(VerticalGridPresenter(FocusHighlight.ZOOM_FACTOR_LARGE, false).apply { numberOfColumns = COLUMNS; setShadowEnabled(false) })
 
 		itemsAdapter = MutableObjectAdapter(CardPresenter(true, CARD_HEIGHT))
 		adapter = itemsAdapter
