@@ -65,7 +65,7 @@ class DiscoverFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				PosterGrid(title.value, items.value, showRankBadge = true) { item -> launch(item) }
+				PosterGrid(title.value, "Sort by: Rank", items.value, showRankBadge = true) { item -> launch(item) }
 			}
 		}
 	}

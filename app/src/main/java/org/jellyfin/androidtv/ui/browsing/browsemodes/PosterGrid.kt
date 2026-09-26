@@ -16,18 +16,23 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.ImageLoader
+import coil3.request.ImageRequest
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.ui.composable.item.ItemCard
@@ -41,17 +46,32 @@ import org.koin.compose.koinInject
 
 const val POSTER_COLUMNS = 7
 
-/** A poster grid with a title header, rendered Compose-native (no Leanback). */
+/** A poster grid with a title header and sort description, rendered Compose-native. */
 @Composable
 internal fun PosterGrid(
 	title: String,
+	sortDescription: String,
 	items: List<BaseItemDto>,
 	showRankBadge: Boolean,
 	onItemClick: (BaseItemDto) -> Unit,
 ) {
 	val api = koinInject<ApiClient>()
+	val imageLoader = koinInject<ImageLoader>()
+	val context = LocalContext.current
 	val imageHelper = remember(api) { ImageHelper(api) }
 	val gridState = rememberLazyGridState()
+
+	// Prefetch posters ahead of the scroll so images are ready when they come into view.
+	LaunchedEffect(gridState) {
+		snapshotFlow { gridState.firstVisibleItemIndex }
+			.collect { first ->
+				val preloadEnd = (first + POSTER_COLUMNS * 4).coerceAtMost(items.size)
+				for (i in first until preloadEnd) {
+					val url = imageHelper.getPrimaryImageUrl(items[i], 200, 300) ?: continue
+					imageLoader.enqueue(ImageRequest.Builder(context).data(url).build())
+				}
+			}
+	}
 
 	Column(modifier = Modifier.fillMaxSize()) {
 		Text(
@@ -61,14 +81,29 @@ internal fun PosterGrid(
 			modifier = Modifier.padding(16.dp),
 		)
 
-		LazyVerticalGrid(
-			columns = GridCells.Fixed(POSTER_COLUMNS),
-			state = gridState,
-			modifier = Modifier.fillMaxSize(),
-			verticalArrangement = Arrangement.spacedBy(4.dp),
-		) {
-			items(items) { item ->
-				PosterCard(item, imageHelper, api, showRankBadge) { onItemClick(item) }
+		Box(modifier = Modifier.fillMaxSize()) {
+			LazyVerticalGrid(
+				columns = GridCells.Fixed(POSTER_COLUMNS),
+				state = gridState,
+				modifier = Modifier.fillMaxSize(),
+				verticalArrangement = Arrangement.spacedBy(4.dp),
+			) {
+				items(items) { item ->
+					PosterCard(item, imageHelper, api, showRankBadge) { onItemClick(item) }
+				}
+			}
+
+			if (sortDescription.isNotEmpty()) {
+				Text(
+					text = sortDescription,
+					fontSize = 12.sp,
+					color = Color(0xCCFFFFFF),
+					modifier = Modifier
+						.align(Alignment.BottomStart)
+						.padding(16.dp)
+						.background(Color(0x99000000))
+						.padding(horizontal = 8.dp, vertical = 4.dp),
+				)
 			}
 		}
 	}

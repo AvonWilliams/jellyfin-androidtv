@@ -139,8 +139,10 @@ class AgeRatingPickerFragment : Fragment() {
 		}
 
 		sorted.forEach { rating ->
+			val count = ratingCounts[rating]
+			val display = if (count != null) "$rating ($count)" else rating
 			val json = buildJsonObject {
-				put("Name", rating)
+				put("Name", display)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
@@ -183,5 +185,6 @@ class AgeRatingPickerFragment : Fragment() {
 			}
 		}
 		ratingCounts = counts
+		if (isAdded) withContext(Dispatchers.Main) { refreshGrid() }
 	}
 }

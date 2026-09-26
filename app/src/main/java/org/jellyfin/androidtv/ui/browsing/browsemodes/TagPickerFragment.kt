@@ -143,8 +143,10 @@ class TagPickerFragment : Fragment() {
 		}
 
 		sorted.forEach { tagName ->
+			val count = tagCounts[tagName]
+			val display = if (count != null) "${tagName.toTitleCase()} ($count)" else tagName.toTitleCase()
 			val json = buildJsonObject {
-				put("Name", tagName.toTitleCase())
+				put("Name", display)
 				put("OriginalTitle", tagName)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
@@ -192,6 +194,7 @@ class TagPickerFragment : Fragment() {
 			}
 		}
 		tagCounts = counts
+		if (isAdded) withContext(Dispatchers.Main) { refreshGrid() }
 	}
 }
 

@@ -66,7 +66,7 @@ class DecadesItemsFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				PosterGrid(title.value, items.value, showRankBadge = false) { item -> launch(item) }
+				PosterGrid(title.value, "Sort by: Premiere date", items.value, showRankBadge = false) { item -> launch(item) }
 			}
 		}
 	}

@@ -66,7 +66,7 @@ class AgeRatingItemsFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				PosterGrid(title.value, items.value, showRankBadge = false) { item -> launch(item) }
+				PosterGrid(title.value, "Sort by: Random", items.value, showRankBadge = false) { item -> launch(item) }
 			}
 		}
 	}
