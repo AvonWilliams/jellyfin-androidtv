@@ -118,16 +118,9 @@ class GenrePickerFragment : Fragment() {
 		genreCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "genre"),
-			values = genreList.map { it.name.orEmpty() },
-			request = { genre ->
-				GetItemsRequest(
-					parentId = folder.id,
-					includeItemTypes = setOf(itemType),
-					genres = setOf(genre),
-					recursive = true,
-					limit = 0,
-				)
-			},
+			type = "genre",
+			parentId = folder.id,
+			itemType = itemType,
 		)
 	}
 }

@@ -180,16 +180,9 @@ class TagPickerFragment : Fragment() {
 		tagCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "tag:${mode.key}"),
-			values = rawTags,
-			request = { tag ->
-				GetItemsRequest(
-					parentId = folder.id,
-					includeItemTypes = setOf(itemType),
-					tags = setOf(tag),
-					recursive = true,
-					limit = 0,
-				)
-			},
+			type = "tag",
+			parentId = folder.id,
+			itemType = itemType,
 		)
 	}
 }

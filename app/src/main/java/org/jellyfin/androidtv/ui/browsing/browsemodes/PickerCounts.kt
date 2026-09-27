@@ -1,11 +1,8 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import org.jellyfin.sdk.api.client.ApiClient
-import org.jellyfin.sdk.api.client.extensions.itemsApi
-import org.jellyfin.sdk.model.api.request.GetItemsRequest
+import org.jellyfin.sdk.api.client.extensions.get
+import org.jellyfin.sdk.model.api.BaseItemKind
 import java.util.UUID
 
 /** In-memory cache of picker item counts, keyed by (library, filter type). */
@@ -20,28 +17,29 @@ internal object PickerCountsCache {
 }
 
 /**
- * Fetches how many titles match each filter value, cached in memory and fetched in parallel so
- * the badges load quickly. `request` builds a `GetItemsRequest` (limit=0) for a single value.
+ * Fetches per-value item counts from the server's /Discover/Counts endpoint in one request.
+ * Cached in memory; falls back to an empty map when the plugin endpoint is unavailable.
  */
 internal suspend fun fetchItemCounts(
 	api: ApiClient,
 	cacheKey: String,
-	values: List<String>,
-	request: (String) -> GetItemsRequest,
+	type: String,
+	parentId: UUID,
+	itemType: BaseItemKind,
 ): Map<String, Int> {
 	PickerCountsCache.get(cacheKey)?.let { return it }
 
-	val counts = coroutineScope {
-		values.map { value ->
-			async {
-				try {
-					val result = api.itemsApi.getItems(request(value))
-					value to (result.content.totalRecordCount ?: 0)
-				} catch (_: Exception) {
-					value to 0
-				}
-			}
-		}.awaitAll().toMap()
+	val counts = try {
+		api.get<Map<String, Int>>(
+			pathTemplate = "/Discover/Counts",
+			queryParameters = mapOf(
+				"type" to type,
+				"parentId" to parentId.toString(),
+				"itemTypes" to itemType.serialName,
+			),
+		).content
+	} catch (_: Exception) {
+		emptyMap()
 	}
 
 	PickerCountsCache.put(cacheKey, counts)

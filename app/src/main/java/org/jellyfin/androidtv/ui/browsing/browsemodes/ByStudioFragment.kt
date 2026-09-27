@@ -118,16 +118,9 @@ class ByStudioFragment : Fragment() {
 		studioCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "studio"),
-			values = studioList.map { it.name.orEmpty() },
-			request = { studio ->
-				GetItemsRequest(
-					parentId = folder.id,
-					includeItemTypes = setOf(itemType),
-					studios = setOf(studio),
-					recursive = true,
-					limit = 0,
-				)
-			},
+			type = "studio",
+			parentId = folder.id,
+			itemType = itemType,
 		)
 	}
 }

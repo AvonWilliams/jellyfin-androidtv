@@ -116,17 +116,9 @@ class DecadesPickerFragment : Fragment() {
 		decadeCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "decade"),
-			values = decadeList.map { "${it}s" },
-			request = { label ->
-				val start = label.removeSuffix("s").toIntOrNull() ?: 0
-				GetItemsRequest(
-					parentId = folder.id,
-					includeItemTypes = setOf(itemType),
-					years = (start..start + 9).toSet(),
-					recursive = true,
-					limit = 0,
-				)
-			},
+			type = "decade",
+			parentId = folder.id,
+			itemType = itemType,
 		)
 	}
 

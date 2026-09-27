@@ -172,16 +172,9 @@ class AgeRatingPickerFragment : Fragment() {
 		ratingCounts.value = fetchItemCounts(
 			api = apiClient,
 			cacheKey = countCacheKey(folder.id, "rating"),
-			values = rawRatings,
-			request = { rating ->
-				GetItemsRequest(
-					parentId = folder.id,
-					includeItemTypes = setOf(itemType),
-					officialRatings = setOf(rating),
-					recursive = true,
-					limit = 0,
-				)
-			},
+			type = "rating",
+			parentId = folder.id,
+			itemType = itemType,
 		)
 	}
 }
