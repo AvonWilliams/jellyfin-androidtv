@@ -6,9 +6,12 @@ import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
 import coil3.gif.AnimatedImageDecoder
 import coil3.gif.GifDecoder
+import coil3.memory.MemoryCache
 import coil3.network.NetworkFetcher
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.maxBitmapSize
 import coil3.serviceLoaderEnabled
+import coil3.size.Size
 import coil3.svg.SvgDecoder
 import coil3.util.Logger
 import org.jellyfin.androidtv.BuildConfig
@@ -122,9 +125,15 @@ val appModule = module {
 	}
 
 	single {
-		ImageLoader.Builder(androidContext()).apply {
+		val context = androidContext()
+		ImageLoader.Builder(context).apply {
 			serviceLoaderEnabled(false)
 			logger(CoilTimberLogger(if (BuildConfig.DEBUG) Logger.Level.Warn else Logger.Level.Error))
+
+			// Cap decoded bitmap sizes to the screen bounds so requests without an explicit
+			// size cannot allocate oversized bitmaps.
+			val metrics = context.resources.displayMetrics
+			maxBitmapSize(Size(metrics.widthPixels, metrics.heightPixels))
 
 			components {
 				add(get<NetworkFetcher.Factory>())
@@ -132,6 +141,12 @@ val appModule = module {
 				if (AndroidVersion.isAtLeastP) add(AnimatedImageDecoder.Factory())
 				else add(GifDecoder.Factory())
 				add(SvgDecoder.Factory())
+			}
+
+			memoryCache {
+				MemoryCache.Builder()
+					.maxSizePercent(context, 0.15)
+					.build()
 			}
 		}.build()
 	}
