@@ -31,7 +31,6 @@ import org.jellyfin.androidtv.ui.presentation.MutableObjectAdapter
 import org.jellyfin.androidtv.ui.presentation.PositionableListRowPresenter
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.get
-import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
@@ -205,23 +204,12 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 	}
 
 	private suspend fun fetchTagCounts() {
-		val counts = mutableMapOf<String, Int>()
-		rawTags.forEach { tag ->
-			try {
-				val result = apiClient.itemsApi.getItems(
-					GetItemsRequest(
-						parentId = folder.id,
-						includeItemTypes = setOf(itemType),
-						tags = setOf(tag),
-						recursive = true,
-						limit = 0,
-					)
-				)
-				counts[tag] = result.content.totalRecordCount ?: 0
-			} catch (_: Exception) {
-				counts[tag] = 0
-			}
-		}
-		tagCounts = counts
+		tagCounts = fetchItemCounts(
+			api = apiClient,
+			cacheKey = countCacheKey(folder.id, "tag:${mode.key}"),
+			type = "tag",
+			parentId = folder.id,
+			itemType = itemType,
+		)
 	}
 }
