@@ -11,7 +11,6 @@ import coil3.request.Disposable
 import coil3.request.ImageRequest
 import coil3.request.maxBitmapSize
 import coil3.request.transformations
-import coil3.size.Dimension
 import coil3.size.Size
 import coil3.toBitmap
 import org.jellyfin.androidtv.R
@@ -104,7 +103,7 @@ class CustomSeekProvider(
 		imageRequests[index] = imageLoader.enqueue(ImageRequest.Builder(context).apply {
 			data(url)
 			size(Size.ORIGINAL)
-			maxBitmapSize(Size(Dimension.Undefined, Dimension.Undefined))
+			maxBitmapSize(Size(trickPlayInfo.tileWidth * trickPlayInfo.width, trickPlayInfo.tileHeight * trickPlayInfo.height))
 			httpHeaders(NetworkHeaders.Builder().apply {
 				set(
 					key = "Authorization",
