@@ -3,7 +3,6 @@ package org.jellyfin.androidtv.ui.browsing.browsemodes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -161,7 +160,6 @@ private fun PosterCard(
 				focused = focusState.isFocused
 				if (focusState.isFocused) onFocus()
 			}
-			.focusable()
 			.clickable(onClick = onClick)
 			.then(if (focused) Modifier.border(3.dp, Color.White) else Modifier),
 	) {
