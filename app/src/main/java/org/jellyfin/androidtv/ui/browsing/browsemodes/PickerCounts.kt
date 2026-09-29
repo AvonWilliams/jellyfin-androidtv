@@ -3,6 +3,7 @@ package org.jellyfin.androidtv.ui.browsing.browsemodes
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.get
 import org.jellyfin.sdk.model.api.BaseItemKind
+import timber.log.Timber
 import java.util.UUID
 
 /** In-memory cache of picker item counts, keyed by (library, filter type). */
@@ -38,7 +39,8 @@ internal suspend fun fetchItemCounts(
 				"itemTypes" to itemType.serialName,
 			),
 		).content
-	} catch (_: Exception) {
+	} catch (error: Exception) {
+		Timber.e(error, "Failed to fetch picker counts from /Discover/Counts (type=%s)", type)
 		emptyMap()
 	}
 
