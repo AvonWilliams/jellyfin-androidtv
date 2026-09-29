@@ -12,6 +12,8 @@ import coil3.ImageLoader
 import coil3.asDrawable
 import coil3.request.ImageRequest
 import coil3.request.error
+import coil3.request.maxBitmapSize
+import coil3.size.Size
 import org.jellyfin.androidtv.BuildConfig
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.util.AndroidVersion
@@ -37,6 +39,8 @@ class ImageProvider : ContentProvider() {
 
 		imageLoader.enqueue(ImageRequest.Builder(context!!).apply {
 			data(src)
+			size(512)
+			maxBitmapSize(Size(512, 512))
 			error(R.drawable.placeholder_icon)
 			target(
 				onSuccess = { image -> writeDrawable(image.asDrawable(context!!.resources), outputStream) },
@@ -67,7 +71,7 @@ class ImageProvider : ContentProvider() {
 	}
 
 	companion object {
-		private const val COMPRESSION_QUALITY = 95
+		private const val COMPRESSION_QUALITY = 80
 
 		/**
 		 * Get a [Uri] that uses the [ImageProvider] to load an image. The input should be a valid

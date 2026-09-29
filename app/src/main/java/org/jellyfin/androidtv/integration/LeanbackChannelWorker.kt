@@ -267,7 +267,7 @@ class LeanbackChannelWorker(
 		(preferParentThumb || !itemImages.contains(ImageType.PRIMARY)) && parentImages.contains(ImageType.THUMB) -> parentImages[ImageType.THUMB]
 		else -> itemImages[ImageType.PRIMARY]
 	}.let { image ->
-		ImageProvider.getImageUri(image?.getUrl(api) ?: imageHelper.getResourceUrl(context, R.drawable.tile_land_tv))
+		ImageProvider.getImageUri(image?.getUrl(api, maxWidth = 512, maxHeight = 512) ?: imageHelper.getResourceUrl(context, R.drawable.tile_land_tv))
 	}
 
 	/**
