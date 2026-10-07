@@ -309,6 +309,7 @@ internal fun ItemRowCard(
 
 			ItemPreview(
 				card = { card() },
+				cardWidth = size.width,
 				title = title?.let { text ->
 					{
 						Text(
