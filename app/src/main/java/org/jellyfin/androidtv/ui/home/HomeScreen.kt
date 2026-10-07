@@ -164,7 +164,7 @@ private fun HomeCard(
 	onClick: () -> Unit,
 ) {
 	var focused by remember { mutableStateOf(false) }
-	val scale by animateFloatAsState(if (focused) 1.12f else 1f, label = "homeCardScale")
+	val scale by animateFloatAsState(if (focused) 1.14f else 1f, label = "homeCardScale")
 
 	Box(
 		modifier = Modifier

@@ -152,26 +152,31 @@ private fun ProgressIndicator(
 	item: BaseItemDto,
 	modifier: Modifier = Modifier,
 ) {
+	// Static progress from the DTO. Only items with a recorded played percentage
+	// can show a bar, and only those pay for the playback subscription below.
+	val staticProgress = if (item.mediaType in progressMediaTypes) {
+		item.userData?.playedPercentage?.toFloat()?.div(100f)?.coerceIn(0f, 1f)
+	} else null
+
+	if (staticProgress == null) return
+
 	val playbackManager = koinInject<PlaybackManager>()
 	val playState by playbackManager.state.playState.collectAsState()
 	val currentQueueEntry by rememberQueueEntry(playbackManager)
 
-	val playedPercentage = when {
-		playState == PlayState.PLAYING && currentQueueEntry?.baseItem?.id == item.id -> rememberPlayerProgress(playbackManager).value
-		item.mediaType in progressMediaTypes -> item.userData?.playedPercentage?.toFloat()?.div(100f)?.coerceIn(0f, 1f)
-
-		else -> null
+	val playedPercentage = if (playState == PlayState.PLAYING && currentQueueEntry?.baseItem?.id == item.id) {
+		rememberPlayerProgress(playbackManager).value
+	} else {
+		staticProgress
 	}
 
-	if (playedPercentage != null) {
-		Box(modifier = modifier.padding(Tokens.Space.spaceXs)) {
-			Seekbar(
-				progress = playedPercentage,
-				enabled = false,
-				modifier = Modifier
-					.fillMaxWidth()
-					.height(4.dp)
-			)
-		}
+	Box(modifier = modifier.padding(Tokens.Space.spaceXs)) {
+		Seekbar(
+			progress = playedPercentage,
+			enabled = false,
+			modifier = Modifier
+				.fillMaxWidth()
+				.height(4.dp)
+		)
 	}
 }
