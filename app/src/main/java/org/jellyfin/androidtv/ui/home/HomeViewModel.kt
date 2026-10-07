@@ -55,8 +55,9 @@ import java.time.Instant
  *
  * Deferred vs the Leanback home (follow-up, not needed for the lag fix):
  *  - Notifications and Now Playing rows (special presenters).
- *  - WebSocket-triggered refresh and single-item refresh on [CustomMessage.RefreshCurrentItem].
+ *  - Single-item refresh on [CustomMessage.RefreshCurrentItem].
  *  - Delete handling via [DataRefreshService.lastDeletedItemId].
+ * WebSocket-triggered refresh is driven from [HomeScreen] while the home is resumed.
  */
 class HomeViewModel(
 	private val context: Context,
