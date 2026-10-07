@@ -1,5 +1,6 @@
 package org.jellyfin.androidtv.ui.home
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +31,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -129,7 +131,7 @@ private fun HomeSectionRow(
 		LazyRow(
 			modifier = Modifier.fillMaxWidth(),
 			horizontalArrangement = Arrangement.spacedBy(8.dp),
-			contentPadding = PaddingValues(horizontal = 16.dp),
+			contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
 		) {
 			itemsIndexed(row.items, key = { _, item -> item.itemId?.toString() ?: item.toString() }) { index, item ->
 				val focusRequester = if (firstItemFocusRequester != null && index == 0) firstItemFocusRequester else null
@@ -161,13 +163,17 @@ private fun HomeCard(
 	onClick: () -> Unit,
 ) {
 	var focused by remember { mutableStateOf(false) }
+	val scale by animateFloatAsState(if (focused) 1.06f else 1f, label = "homeCardScale")
 
 	Box(
 		modifier = Modifier
 			.then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
 			.onFocusChanged { focused = it.isFocused }
 			.clickable(onClick = onClick)
-			.then(if (focused) Modifier.border(3.dp, Color.White) else Modifier),
+			.graphicsLayer {
+				scaleX = scale
+				scaleY = scale
+			},
 	) {
 		ItemRowCard(
 			item = item,
