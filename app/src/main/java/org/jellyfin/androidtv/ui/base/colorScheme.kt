@@ -28,8 +28,8 @@ fun colorScheme(branding: BrandingColors? = null): ColorScheme {
 		seekbarBuffer = Tokens.Color.colorBluegrey300,
 		recording = Tokens.Color.colorRed300,
 		onRecording = Tokens.Color.colorRed25,
-		badge = Tokens.Color.colorCyan500,
-		onBadge = Tokens.Color.colorBluegrey100,
+		badge = Color(0xB31C2026),
+		onBadge = Tokens.Color.colorWhite,
 		listHeader = Tokens.Color.colorGrey50,
 		listOverline = Tokens.Color.colorGrey500,
 		listHeadline = Tokens.Color.colorGrey25,
@@ -47,7 +47,6 @@ fun colorScheme(branding: BrandingColors? = null): ColorScheme {
 		surface = branding.surface.toColor(),
 		onBackground = branding.onBackground.toColor(),
 		rangeControlFill = branding.primary.toColor(),
-		badge = branding.primary.toColor(),
 		recording = branding.secondary.toColor(),
 	)
 }
