@@ -15,7 +15,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.IntSize
 import androidx.core.graphics.drawable.toBitmap
 import coil3.ImageLoader
-import coil3.compose.rememberAsyncImagePainter
+import coil3.compose.AsyncImage as CoilAsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jellyfin.androidtv.util.BlurHashDecoder
@@ -68,15 +68,13 @@ fun AsyncImage(
 		return
 	}
 
-	Image(
-		painter = rememberAsyncImagePainter(
-			model = url,
-			imageLoader = imageLoader,
-			placeholder = blurHashPlaceholder ?: placeholderPainter,
-			error = placeholderPainter,
-		),
+	CoilAsyncImage(
+		model = url,
 		contentDescription = null,
+		imageLoader = imageLoader,
 		modifier = modifier,
+		placeholder = blurHashPlaceholder ?: placeholderPainter,
+		error = placeholderPainter,
 		contentScale = contentScale,
 	)
 }
