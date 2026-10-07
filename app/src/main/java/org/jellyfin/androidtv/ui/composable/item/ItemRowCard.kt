@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -193,6 +194,7 @@ internal fun ItemRowCard(
 	staticHeight: Int,
 	uniformAspect: Boolean,
 	showRankBadge: Boolean,
+	lean: Boolean = false,
 	modifier: Modifier = Modifier,
 ) {
 	val context = LocalContext.current
@@ -251,49 +253,72 @@ internal fun ItemRowCard(
 						)
 					}
 				},
-				overlay = {
-					val showInfo = !usePreview && item.showCardInfoOverlay
-					item.baseItem?.let { baseItem ->
-						ItemCardBaseItemOverlay(
-							item = baseItem,
-							footer = {
-								if (showInfo && title != null) {
-									val focusModifier = if (focused) Modifier.basicMarquee(
-										iterations = Int.MAX_VALUE,
-										initialDelayMillis = 0,
-									) else Modifier
-
-									Box(
-										modifier = Modifier
-											.fillMaxWidth()
-											.background(Tokens.Color.colorBluegrey900.copy(alpha = 0.6f), JellyfinTheme.shapes.extraSmall),
-									) {
-										Text(
-											text = title,
-											maxLines = 1,
-											overflow = TextOverflow.Ellipsis,
-											textAlign = TextAlign.Center,
-											color = Tokens.Color.colorWhite,
-											modifier = Modifier
-												.then(focusModifier)
-												.padding(Tokens.Space.spaceXs),
-										)
-									}
-								}
-							}
-						)
-					}
-					if (showRankBadge) {
-						item.baseItem?.indexNumber
-							?.takeIf { it > 0 }
-							?.let { rank ->
-								RankBadge(
-									rank = rank,
-									modifier = Modifier
-										.align(Alignment.TopStart)
-										.padding(4.dp),
+				overlay = if (lean) {
+					{
+						title?.let { name ->
+							Box(
+								modifier = Modifier
+									.align(Alignment.BottomCenter)
+									.fillMaxWidth()
+									.background(Color(0x99000000))
+									.padding(horizontal = 8.dp, vertical = 4.dp),
+							) {
+								Text(
+									text = name,
+									maxLines = 1,
+									overflow = TextOverflow.Ellipsis,
+									textAlign = TextAlign.Center,
+									color = Tokens.Color.colorWhite,
+									modifier = Modifier.fillMaxWidth(),
 								)
 							}
+						}
+					}
+				} else {
+					{
+						val showInfo = !usePreview && item.showCardInfoOverlay
+						item.baseItem?.let { baseItem ->
+							ItemCardBaseItemOverlay(
+								item = baseItem,
+								footer = {
+									if (showInfo && title != null) {
+										val focusModifier = if (focused) Modifier.basicMarquee(
+											iterations = Int.MAX_VALUE,
+											initialDelayMillis = 0,
+										) else Modifier
+
+										Box(
+											modifier = Modifier
+												.fillMaxWidth()
+												.background(Tokens.Color.colorBluegrey900.copy(alpha = 0.6f), JellyfinTheme.shapes.extraSmall),
+										) {
+											Text(
+												text = title,
+												maxLines = 1,
+												overflow = TextOverflow.Ellipsis,
+												textAlign = TextAlign.Center,
+												color = Tokens.Color.colorWhite,
+												modifier = Modifier
+													.then(focusModifier)
+													.padding(Tokens.Space.spaceXs),
+											)
+										}
+									}
+								}
+							)
+						}
+						if (showRankBadge) {
+							item.baseItem?.indexNumber
+								?.takeIf { it > 0 }
+								?.let { rank ->
+									RankBadge(
+										rank = rank,
+										modifier = Modifier
+											.align(Alignment.TopStart)
+											.padding(4.dp),
+									)
+								}
+						}
 					}
 				},
 				modifier = Modifier
@@ -301,7 +326,7 @@ internal fun ItemRowCard(
 			)
 		}
 
-		if (usePreview) {
+		if (!lean && usePreview) {
 			val focusModifier = if (focused) Modifier.basicMarquee(
 				iterations = Int.MAX_VALUE,
 				initialDelayMillis = 0,
