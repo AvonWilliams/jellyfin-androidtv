@@ -39,6 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -131,7 +132,7 @@ private fun HomeSectionRow(
 		LazyRow(
 			modifier = Modifier.fillMaxWidth(),
 			horizontalArrangement = Arrangement.spacedBy(8.dp),
-			contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+			contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
 		) {
 			itemsIndexed(row.items, key = { _, item -> item.itemId?.toString() ?: item.toString() }) { index, item ->
 				val focusRequester = if (firstItemFocusRequester != null && index == 0) firstItemFocusRequester else null
@@ -163,13 +164,14 @@ private fun HomeCard(
 	onClick: () -> Unit,
 ) {
 	var focused by remember { mutableStateOf(false) }
-	val scale by animateFloatAsState(if (focused) 1.06f else 1f, label = "homeCardScale")
+	val scale by animateFloatAsState(if (focused) 1.12f else 1f, label = "homeCardScale")
 
 	Box(
 		modifier = Modifier
 			.then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
 			.onFocusChanged { focused = it.isFocused }
 			.clickable(onClick = onClick)
+			.zIndex(if (focused) 1f else 0f)
 			.graphicsLayer {
 				scaleX = scale
 				scaleY = scale

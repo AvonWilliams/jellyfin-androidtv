@@ -319,7 +319,7 @@ class HomeViewModel(
 	private fun triggersOf(vararg triggers: ChangeTriggerType) = triggers.toList()
 
 	private companion object {
-		private const val CARD_HEIGHT = 150
+		private const val CARD_HEIGHT = 180
 		private const val CARD_HEIGHT_LARGE = 126
 		private const val CARD_HEIGHT_SMALL = 75
 
