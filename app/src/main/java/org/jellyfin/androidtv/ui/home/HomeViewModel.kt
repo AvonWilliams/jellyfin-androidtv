@@ -3,6 +3,7 @@ package org.jellyfin.androidtv.ui.home
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.auth.repository.UserRepository
@@ -106,7 +108,7 @@ class HomeViewModel(
 
 			val rows = coroutineScope {
 				currentDefs.map { def ->
-					async {
+					async(Dispatchers.IO) {
 						HomeRow(
 							key = def.key,
 							title = def.title,
@@ -151,7 +153,7 @@ class HomeViewModel(
 
 				if (needsFetch) {
 					val items = try {
-						def.fetch()
+						withContext(Dispatchers.IO) { def.fetch() }
 					} catch (e: Exception) {
 						existing?.items.orEmpty()
 					}
