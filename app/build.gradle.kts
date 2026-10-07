@@ -14,7 +14,7 @@ android {
 		targetSdk = libs.versions.android.targetSdk.get().toInt()
 
 		// Release version
-		applicationId = "org.jellyfin.androidtv.perf"
+		applicationId = "org.jellyfin.androidtv.compose"
 		versionName = project.getVersionName()
 		versionCode = getVersionCode(versionName!!)
 	}
@@ -58,9 +58,9 @@ android {
 			proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
 
 			// Set package names used in various XML files
-			resValue("string", "app_id", "org.jellyfin.androidtv.perf")
-			resValue("string", "app_search_suggest_authority", "org.jellyfin.androidtv.perf.content")
-			resValue("string", "app_search_suggest_intent_data", "content://org.jellyfin.androidtv.perf.content/intent")
+			resValue("string", "app_id", "org.jellyfin.androidtv.compose")
+			resValue("string", "app_search_suggest_authority", "org.jellyfin.androidtv.compose.content")
+			resValue("string", "app_search_suggest_intent_data", "content://org.jellyfin.androidtv.compose.content/intent")
 
 			// Set flavored application name
 			resValue("string", "app_name", "@string/app_name_release")
@@ -75,9 +75,9 @@ android {
 			applicationIdSuffix = ".debug"
 
 			// Set package names used in various XML files
-			resValue("string", "app_id", "org.jellyfin.androidtv.perf.debug")
-			resValue("string", "app_search_suggest_authority", "org.jellyfin.androidtv.perf.debug.content")
-			resValue("string", "app_search_suggest_intent_data", "content://org.jellyfin.androidtv.perf.debug.content/intent")
+			resValue("string", "app_id", "org.jellyfin.androidtv.compose.debug")
+			resValue("string", "app_search_suggest_authority", "org.jellyfin.androidtv.compose.debug.content")
+			resValue("string", "app_search_suggest_intent_data", "content://org.jellyfin.androidtv.compose.debug.content/intent")
 
 			// Set flavored application name
 			resValue("string", "app_name", "@string/app_name_debug")
