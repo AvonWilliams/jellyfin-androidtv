@@ -47,6 +47,8 @@ fun colorScheme(branding: BrandingColors? = null): ColorScheme {
 		surface = branding.surface.toColor(),
 		onBackground = branding.onBackground.toColor(),
 		rangeControlFill = branding.primary.toColor(),
+		badge = branding.surface.toColor(),
+		onBadge = branding.onBackground.toColor(),
 		recording = branding.secondary.toColor(),
 	)
 }
