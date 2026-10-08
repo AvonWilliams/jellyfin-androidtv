@@ -22,7 +22,7 @@ import org.koin.android.ext.android.inject
  */
 class BrowseModesFragment : VerticalGridSupportFragment() {
 	private companion object {
-		const val COLUMNS = 4
+		const val COLUMNS = 6
 	}
 
 	private val navigationRepository by inject<NavigationRepository>()
@@ -48,7 +48,7 @@ class BrowseModesFragment : VerticalGridSupportFragment() {
 
 			primary.forEach { add(BrowseModeTile(it, getString(it.label))) }
 			add(BrowseModeHeader(getString(R.string.lbl_browse_by)))
-			meta.forEach { add(BrowseModeTile(it, getString(it.label))) }
+			meta.forEach { add(BrowseModeTile(it, getString(it.label), small = true)) }
 		}
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->

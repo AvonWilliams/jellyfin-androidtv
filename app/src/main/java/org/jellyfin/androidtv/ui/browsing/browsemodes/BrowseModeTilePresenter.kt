@@ -55,41 +55,52 @@ private class ComposeViewWrapper(
  */
 class BrowseModeTilePresenter : Presenter() {
 	private companion object {
-		// Four of these plus leanback's own padding have to fit the width of a 720p TV, which at
-		// its usual density is only around 960dp — 220dp wide overflowed the last column.
-		const val TILE_WIDTH = 200
-		const val TILE_HEIGHT = 112
+		// Six of these plus leanback's own padding have to fit the width of a 720p TV, which at
+		// its usual density is only around 960dp.
+		const val TILE_WIDTH = 140
+		const val TILE_HEIGHT = 79
 		const val ICON_SIZE = 32
+		const val LABEL_SIZE = 16
+
+		// The "Browse by…" meta tiles are visibly smaller than the primary row.
+		const val META_TILE_WIDTH = 110
+		const val META_TILE_HEIGHT = 62
+		const val META_ICON_SIZE = 24
+		const val META_LABEL_SIZE = 14
 	}
 
 	inner class ViewHolder(
 		private val composeView: ComposeView,
 	) : Presenter.ViewHolder(ComposeViewWrapper(composeView, focusable = true)) {
 		fun bind(tile: BrowseModeTile) = composeView.setContent {
+			val width = if (tile.small) META_TILE_WIDTH else TILE_WIDTH
+			val height = if (tile.small) META_TILE_HEIGHT else TILE_HEIGHT
+			val iconSize = if (tile.small) META_ICON_SIZE else ICON_SIZE
+			val labelSize = if (tile.small) META_LABEL_SIZE else LABEL_SIZE
 			Box(
 				contentAlignment = Alignment.Center,
 				modifier = Modifier
-					.size(TILE_WIDTH.dp, TILE_HEIGHT.dp)
+					.size(width.dp, height.dp)
 					.clip(RoundedCornerShape(4.dp))
-					.background(colorResource(R.color.button_default_normal_background))
+					.background(colorResource(R.color.browse_mode_tile_background))
 			) {
 				Column(
 					horizontalAlignment = Alignment.CenterHorizontally,
-					verticalArrangement = Arrangement.spacedBy(6.dp),
-					modifier = Modifier.padding(horizontal = 12.dp)
+					verticalArrangement = Arrangement.spacedBy(4.dp),
+					modifier = Modifier.padding(horizontal = 8.dp)
 				) {
 					Image(
 						painter = painterResource(tile.definition.icon),
 						contentDescription = null,
 						colorFilter = tile.definition.iconTint
 							?.let { ColorFilter.tint(colorResource(it)) },
-						modifier = Modifier.size(ICON_SIZE.dp)
+						modifier = Modifier.size(iconSize.dp)
 					)
 
 					Text(
 						text = tile.label,
 						color = colorResource(R.color.button_default_normal_text),
-						fontSize = 16.sp,
+						fontSize = labelSize.sp,
 						textAlign = TextAlign.Center,
 					)
 				}
@@ -113,8 +124,10 @@ class BrowseModeTilePresenter : Presenter() {
 /** A non-interactive section label between the primary and meta tile groups. */
 class BrowseModeHeaderPresenter : Presenter() {
 	private companion object {
-		const val WIDTH = 200
-		const val HEIGHT = 112
+		// Matches the meta tile height so the "Browse by…" label shares its row without
+		// stretching it.
+		const val WIDTH = 110
+		const val HEIGHT = 62
 	}
 
 	inner class ViewHolder(
@@ -153,6 +166,8 @@ class BrowseModeHeaderPresenter : Presenter() {
 data class BrowseModeTile(
 	val definition: BrowseModeDefinition,
 	val label: String,
+	/** Renders at the smaller meta-tile size. */
+	val small: Boolean = false,
 )
 
 /** A section header in the browse modes grid. */
