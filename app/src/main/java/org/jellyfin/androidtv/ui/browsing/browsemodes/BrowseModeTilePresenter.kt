@@ -88,7 +88,8 @@ internal fun BrowseModeTileContent(
 		modifier = modifier
 			.size(width.dp, height.dp)
 			.clip(RoundedCornerShape(4.dp))
-			.background(colorResource(R.color.browse_mode_tile_background)),
+			.background(colorResource(R.color.browse_mode_tile_background))
+			.border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(4.dp)),
 	) {
 		Column(
 			horizontalAlignment = Alignment.CenterHorizontally,
