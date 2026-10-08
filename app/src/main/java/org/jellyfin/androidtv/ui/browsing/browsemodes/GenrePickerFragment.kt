@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.colorResource
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -14,6 +16,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.util.Locale
+import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.navigation.Destinations
@@ -64,7 +68,13 @@ class GenrePickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value, counts = genreCounts.value) { item -> onClick(item) }
+				TextListGrid(
+					title.value,
+					items.value,
+					counts = genreCounts.value,
+					iconFor = { genreIconFor(it.name) },
+					iconTint = colorResource(R.color.browse_mode_genres),
+				) { item -> onClick(item) }
 			}
 		}
 	}
@@ -122,5 +132,31 @@ class GenrePickerFragment : Fragment() {
 			parentId = folder.id,
 			itemType = itemType,
 		)
+	}
+}
+
+/**
+ * Maps a server genre name to its specific monochrome icon, matching the web client's per-genre
+ * icons. Unlisted genres fall back to the generic genre (masks) icon.
+ */
+@DrawableRes
+private fun genreIconFor(name: String?): Int {
+	val genre = name?.trim()?.lowercase(Locale.ROOT).orEmpty()
+	return when (genre) {
+		"action" -> R.drawable.ic_genre_action
+		"adventure" -> R.drawable.ic_genre_adventure
+		"animation", "animated" -> R.drawable.ic_genre_animation
+		"comedy" -> R.drawable.ic_genre_comedy
+		"crime", "crime fiction" -> R.drawable.ic_genre_crime
+		"documentary", "documentaries" -> R.drawable.ic_genre_documentary
+		"drama" -> R.drawable.ic_genre_drama
+		"family", "kids", "children" -> R.drawable.ic_genre_family
+		"fantasy" -> R.drawable.ic_genre_fantasy
+		"horror" -> R.drawable.ic_genre_horror
+		"mystery" -> R.drawable.ic_genre_mystery
+		"romance", "romantic" -> R.drawable.ic_genre_romance
+		"sci-fi", "sci fi", "scifi", "science fiction", "science-fiction", "sf" -> R.drawable.ic_genre_scifi
+		"thriller", "suspense" -> R.drawable.ic_genre_thriller
+		else -> R.drawable.ic_masks
 	}
 }
