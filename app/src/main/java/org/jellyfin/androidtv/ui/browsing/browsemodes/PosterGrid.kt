@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -291,7 +292,7 @@ private fun ComingSoonCard(
 					url = stub.posterUrl.ifBlank { null },
 					aspectRatio = 2f / 3f,
 					colorFilter = colorFilter,
-					modifier = Modifier.fillMaxSize(),
+					modifier = Modifier.fillMaxSize().alpha(0.35f),
 				)
 			},
 			overlay = {
@@ -322,14 +323,14 @@ private fun ComingSoonCard(
 						modifier = Modifier
 							.requiredWidth(maxWidth * 1.19f)
 							.rotate(56.31f)
-							.background(Color(0xD9000000))
+							.background(Color(0x40000000))
 							.padding(horizontal = 8.dp, vertical = 4.dp),
 						contentAlignment = Alignment.Center,
 					) {
 						Text(
 							text = stringResource(R.string.coming_soon),
-							fontSize = 11.sp,
-							color = Color.White,
+							fontSize = 18.sp,
+							color = Color.White.copy(alpha = 0.75f),
 							textAlign = TextAlign.Center,
 						)
 					}
