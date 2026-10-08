@@ -275,7 +275,7 @@ private fun ComingSoonCard(
 	focusRequester: FocusRequester?,
 ) {
 	var focused by remember { mutableStateOf(false) }
-	val colorFilter = remember { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }) }
+	val colorFilter = remember { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0.9f) }) }
 
 	Box(
 		modifier = Modifier
@@ -292,7 +292,7 @@ private fun ComingSoonCard(
 					url = stub.posterUrl.ifBlank { null },
 					aspectRatio = 2f / 3f,
 					colorFilter = colorFilter,
-					modifier = Modifier.fillMaxSize().alpha(0.35f),
+					modifier = Modifier.fillMaxSize().alpha(0.5f),
 				)
 			},
 			overlay = {
@@ -300,7 +300,7 @@ private fun ComingSoonCard(
 				Box(
 					modifier = Modifier
 						.fillMaxSize()
-						.background(Color(0x80000000)),
+						.background(Color(0x00000000)),
 				)
 
 				if (stub.rank > 0) {
