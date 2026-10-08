@@ -28,13 +28,17 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.ImageLoader
 import coil3.request.ImageRequest
+import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.browsing.composable.inforow.BaseItemInfoRow
 import org.jellyfin.androidtv.ui.composable.AsyncImage
@@ -57,6 +61,7 @@ internal fun PosterGrid(
 	items: List<BaseItemDto>,
 	showRankBadge: Boolean,
 	emptyMessage: String? = null,
+	missing: List<MissingTitleDto> = emptyList(),
 	onItemClick: (BaseItemDto) -> Unit,
 ) {
 	val api = koinInject<ApiClient>()
@@ -68,8 +73,8 @@ internal fun PosterGrid(
 	val firstItemFocusRequester = remember { FocusRequester() }
 
 	// Focus the first card so a single DPAD center press activates it immediately.
-	LaunchedEffect(items.isNotEmpty()) {
-		if (items.isNotEmpty()) firstItemFocusRequester.requestFocus()
+	LaunchedEffect(items.isNotEmpty() || missing.isNotEmpty()) {
+		if (items.isNotEmpty() || missing.isNotEmpty()) firstItemFocusRequester.requestFocus()
 	}
 
 	// Prefetch posters ahead of the scroll so images are ready when they come into view.
@@ -119,9 +124,18 @@ internal fun PosterGrid(
 						onClick = { onItemClick(item) },
 					)
 				}
+
+				// External titles not in the library, rendered after the in-library items as
+				// dimmed, non-clickable "coming soon" tiles.
+				itemsIndexed(missing) { index, stub ->
+					ComingSoonCard(
+						stub,
+						focusRequester = if (items.isEmpty() && index == 0) firstItemFocusRequester else null,
+					)
+				}
 			}
 
-			if (items.isEmpty()) {
+			if (items.isEmpty() && missing.isEmpty()) {
 				emptyMessage?.let { message ->
 					Text(
 						text = message,
@@ -209,6 +223,94 @@ private fun PosterCard(
 					) {
 						Text(
 							text = name,
+							fontSize = 12.sp,
+							color = Color.White,
+							maxLines = 1,
+							overflow = TextOverflow.Ellipsis,
+							textAlign = TextAlign.Center,
+							modifier = Modifier.fillMaxWidth(),
+						)
+					}
+				}
+			},
+		)
+	}
+}
+
+/**
+ * A tile for an external title that is not in the library: the source poster desaturated and
+ * dimmed, a "Coming soon" banner, and the active source's rank badge. Deliberately not clickable —
+ * a missing title has no detail or play navigation.
+ */
+@Composable
+private fun ComingSoonCard(
+	stub: MissingTitleDto,
+	focusRequester: FocusRequester?,
+) {
+	var focused by remember { mutableStateOf(false) }
+	val colorFilter = remember { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }) }
+
+	Box(
+		modifier = Modifier
+			.aspectRatio(2f / 3f)
+			.padding(4.dp)
+			.then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+			.onFocusChanged { focused = it.isFocused }
+			.then(if (focused) Modifier.border(3.dp, Color.White) else Modifier),
+	) {
+		ItemCard(
+			modifier = Modifier.fillMaxSize(),
+			image = {
+				AsyncImage(
+					url = stub.posterUrl.ifBlank { null },
+					aspectRatio = 2f / 3f,
+					colorFilter = colorFilter,
+					modifier = Modifier.fillMaxSize(),
+				)
+			},
+			overlay = {
+				// Dim the desaturated poster further so the tile reads as unavailable.
+				Box(
+					modifier = Modifier
+						.fillMaxSize()
+						.background(Color(0x66000000)),
+				)
+
+				if (stub.rank > 0) {
+					RankBadge(
+						rank = stub.rank,
+						modifier = Modifier
+							.align(Alignment.TopStart)
+							.padding(4.dp),
+					)
+				}
+
+				Box(
+					modifier = Modifier
+						.align(Alignment.Center)
+						.fillMaxWidth()
+						.background(Color(0xB3000000))
+						.padding(vertical = 4.dp),
+					contentAlignment = Alignment.Center,
+				) {
+					Text(
+						text = stringResource(R.string.coming_soon),
+						fontSize = 11.sp,
+						color = Color.White,
+						textAlign = TextAlign.Center,
+					)
+				}
+
+				stub.title.ifBlank { null }?.let { title ->
+					Box(
+						modifier = Modifier
+							.align(Alignment.BottomCenter)
+							.fillMaxWidth()
+							.background(Color(0x99000000))
+							.padding(horizontal = 8.dp, vertical = 4.dp),
+					) {
+						Text(
+							text = title,
 							fontSize = 12.sp,
 							color = Color.White,
 							maxLines = 1,

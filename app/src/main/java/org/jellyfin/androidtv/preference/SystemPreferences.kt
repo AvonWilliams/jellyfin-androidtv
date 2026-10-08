@@ -73,5 +73,11 @@ class SystemPreferences(context: Context) : SharedPreferenceStore(
 		 * mode's stable key (Trending, Top Rated). Empty until the user picks a source.
 		 */
 		fun browseSourcePreference(modeKey: String) = stringPreference("browse_source_$modeKey", "")
+
+		/**
+		 * Whether ranked discover lists show external titles that are not in the library. Defaults
+		 * on; hiding them never changes the server default, only this client's rendering.
+		 */
+		val showMissingTitles = booleanPreference("show_missing_titles", true)
 	}
 }
