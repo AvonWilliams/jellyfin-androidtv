@@ -40,14 +40,14 @@ import org.jellyfin.androidtv.ui.base.Text
 // its usual density is only around 960dp.
 private const val TILE_WIDTH = 140
 private const val TILE_HEIGHT = 79
-private const val ICON_SIZE = 32
-private const val LABEL_SIZE = 16
+private const val ICON_SIZE = 48
+private const val LABEL_SIZE = 20
 
 // The "Browse by…" meta tiles are visibly smaller than the primary row.
 private const val META_TILE_WIDTH = 110
 private const val META_TILE_HEIGHT = 62
-private const val META_ICON_SIZE = 24
-private const val META_LABEL_SIZE = 14
+private const val META_ICON_SIZE = 38
+private const val META_LABEL_SIZE = 16
 
 /**
  * Wraps a ComposeView so it can be measured by a leanback grid presenter without crashing.
