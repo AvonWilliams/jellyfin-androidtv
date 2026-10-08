@@ -56,6 +56,7 @@ internal fun PosterGrid(
 	sortDescription: String,
 	items: List<BaseItemDto>,
 	showRankBadge: Boolean,
+	emptyMessage: String? = null,
 	onItemClick: (BaseItemDto) -> Unit,
 ) {
 	val api = koinInject<ApiClient>()
@@ -116,6 +117,20 @@ internal fun PosterGrid(
 						focusRequester = if (index == 0) firstItemFocusRequester else null,
 						onFocus = { focusedItem = item },
 						onClick = { onItemClick(item) },
+					)
+				}
+			}
+
+			if (items.isEmpty()) {
+				emptyMessage?.let { message ->
+					Text(
+						text = message,
+						fontSize = 18.sp,
+						color = Color(0xCCFFFFFF),
+						textAlign = TextAlign.Center,
+						modifier = Modifier
+							.align(Alignment.Center)
+							.padding(16.dp),
 					)
 				}
 			}

@@ -94,6 +94,7 @@
     <string name="msg_cannot_play_time">Cannot play this item at this time</string>
     <string name="msg_cannot_play">This item cannot be played</string>
     <string name="lbl_no_items">No items</string>
+    <string name="msg_no_items_in_category">No items in this category</string>
     <string name="lbl_empty">Empty</string>
     <string name="lbl_tv_queuing">Play next episode automatically</string>
     <string name="lbl_search_hint">Search text (select for keyboard)</string>
