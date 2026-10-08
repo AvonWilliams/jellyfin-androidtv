@@ -691,13 +691,16 @@
 
     <!-- Browse modes -->
     <string name="lbl_browse_by">Browse by…</string>
+    <string name="lbl_browse_mode_actors">Actors</string>
     <string name="lbl_browse_mode_critics_picks">Critics\' Picks</string>
     <string name="lbl_browse_mode_decades">Decades</string>
+    <string name="lbl_browse_mode_directors">Directors</string>
     <string name="lbl_browse_mode_hidden_gems">Hidden Gems</string>
     <string name="lbl_browse_mode_just_added">Just Added</string>
     <string name="lbl_browse_mode_mood">Mood</string>
     <string name="lbl_browse_mode_mood_tone">Mood &amp; Tone</string>
     <string name="lbl_browse_mode_new_releases">New Releases</string>
+    <string name="lbl_browse_mode_people">People</string>
     <string name="lbl_browse_mode_plot_elements">Plot Elements</string>
     <string name="lbl_browse_mode_quality">Quality</string>
     <string name="lbl_browse_mode_story">Story</string>
@@ -709,6 +712,8 @@
     <string name="lbl_browse_mode_watch_again">Watch Again</string>
     <string name="lbl_browse_mode_world_style">World &amp; Style</string>
     <string name="lbl_browse_mode_worlds">Worlds</string>
+    <string name="lbl_browse_mode_writers">Writers</string>
+    <string name="lbl_browse_mode_year">Year</string>
     <string name="lbl_browse_mode_age_rating">Age Rating</string>
     <string name="lbl_studios">Studios</string>
     <string name="lbl_networks">Networks</string>

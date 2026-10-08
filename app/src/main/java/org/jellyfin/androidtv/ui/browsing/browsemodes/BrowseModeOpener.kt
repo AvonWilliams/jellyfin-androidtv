@@ -53,11 +53,21 @@ fun LifecycleOwner.openBrowseMode(
 		definition.destination == BrowseModeDestination.DECADES_PICKER ->
 			navigationRepository.navigate(Destinations.decadesPicker(folder))
 
+		definition.destination == BrowseModeDestination.YEARS_PICKER ->
+			navigationRepository.navigate(Destinations.yearsPicker(folder))
+
 		definition.destination == BrowseModeDestination.AGE_RATING_PICKER ->
 			navigationRepository.navigate(Destinations.ageRatingPicker(folder))
 
 		definition.destination == BrowseModeDestination.META_PICKER ->
 			navigationRepository.navigate(Destinations.metaPicker(folder, definition.mode.key))
+
+		definition.destination == BrowseModeDestination.PERSON_LIST -> {
+			val personType = definition.personType
+			if (personType != null) {
+				navigationRepository.navigate(Destinations.personList(folder, personType))
+			}
+		}
 
 		definition.preset == null ->
 			navigationRepository.navigate(Destinations.libraryBrowser(folder))

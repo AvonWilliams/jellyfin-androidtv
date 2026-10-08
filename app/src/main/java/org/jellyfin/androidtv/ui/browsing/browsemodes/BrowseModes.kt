@@ -6,6 +6,7 @@ import androidx.annotation.StringRes
 import org.jellyfin.androidtv.R
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ItemSortBy
+import org.jellyfin.sdk.model.api.PersonKind
 import org.jellyfin.sdk.model.api.SortOrder
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -36,11 +37,16 @@ enum class BrowseMode(val key: String) {
 	WORLDS("worlds"),
 	STYLES("styles"),
 	DECADES("decades"),
+	YEAR("year"),
 	AGE_RATING("agerating"),
 	STORY("story"),
 	WORLD_STYLE("worldstyle"),
 	QUALITY("quality"),
 	TIME("time"),
+	PEOPLE("people"),
+	ACTORS("actors"),
+	DIRECTORS("directors"),
+	WRITERS("writers"),
 }
 
 /** Which section of the browse-modes home a tile belongs to. */
@@ -78,6 +84,10 @@ data class BrowseModeDefinition(
 	val tier: BrowseTier = BrowseTier.PRIMARY,
 	/** For a [BrowseModeDestination.META_PICKER] tile: the choices, each an existing mode. */
 	val children: List<BrowseModeDefinition>? = null,
+	/** Renders its children inline on the home grid instead of opening a secondary menu. */
+	val inline: Boolean = false,
+	/** For a [BrowseModeDestination.PERSON_LIST] tile: the person kind to list. */
+	val personType: String? = null,
 )
 
 /** Screens reachable from a tile that are not the item grid. */
@@ -94,11 +104,17 @@ enum class BrowseModeDestination {
 	/** A grid of decades to filter by. */
 	DECADES_PICKER,
 
+	/** A grid of individual years to filter by. */
+	YEARS_PICKER,
+
 	/** A grid of age ratings to filter by. */
 	AGE_RATING_PICKER,
 
 	/** A secondary grid of choices, held in the tile's [BrowseModeDefinition.children]. */
 	META_PICKER,
+
+	/** A list of people of one kind (actor/director/writer). */
+	PERSON_LIST,
 }
 
 /**
@@ -293,13 +309,69 @@ private val worldStyleMode = BrowseModeDefinition(
 	children = listOf(worldsMode, stylesMode),
 )
 
+// The leaves of the inline Time meta tile: a decades picker and a single-year picker.
+private val decadesMode = BrowseModeDefinition(
+	mode = BrowseMode.DECADES,
+	label = R.string.lbl_browse_mode_decades,
+	icon = R.drawable.ic_calendar,
+	iconTint = R.color.browse_mode_decades,
+	destination = BrowseModeDestination.DECADES_PICKER,
+)
+
+private val yearMode = BrowseModeDefinition(
+	mode = BrowseMode.YEAR,
+	label = R.string.lbl_browse_mode_year,
+	icon = R.drawable.ic_calendar,
+	iconTint = R.color.browse_mode_decades,
+	destination = BrowseModeDestination.YEARS_PICKER,
+)
+
 private val timeMode = BrowseModeDefinition(
 	mode = BrowseMode.TIME,
 	label = R.string.lbl_browse_mode_time,
 	icon = R.drawable.ic_calendar,
 	iconTint = R.color.browse_mode_decades,
-	destination = BrowseModeDestination.DECADES_PICKER,
 	tier = BrowseTier.META,
+	inline = true,
+	children = listOf(decadesMode, yearMode),
+)
+
+// The leaves of the inline People meta tile, each listing the library's persons of one kind.
+private val actorsMode = BrowseModeDefinition(
+	mode = BrowseMode.ACTORS,
+	label = R.string.lbl_browse_mode_actors,
+	icon = R.drawable.ic_user,
+	iconTint = R.color.browse_mode_people,
+	destination = BrowseModeDestination.PERSON_LIST,
+	personType = PersonKind.ACTOR.serialName,
+)
+
+private val directorsMode = BrowseModeDefinition(
+	mode = BrowseMode.DIRECTORS,
+	label = R.string.lbl_browse_mode_directors,
+	icon = R.drawable.ic_movie,
+	iconTint = R.color.browse_mode_directors,
+	destination = BrowseModeDestination.PERSON_LIST,
+	personType = PersonKind.DIRECTOR.serialName,
+)
+
+private val writersMode = BrowseModeDefinition(
+	mode = BrowseMode.WRITERS,
+	label = R.string.lbl_browse_mode_writers,
+	icon = R.drawable.ic_book,
+	iconTint = R.color.browse_mode_writers,
+	destination = BrowseModeDestination.PERSON_LIST,
+	personType = PersonKind.WRITER.serialName,
+)
+
+private val peopleMode = BrowseModeDefinition(
+	mode = BrowseMode.PEOPLE,
+	label = R.string.lbl_browse_mode_people,
+	icon = R.drawable.ic_users,
+	iconTint = R.color.browse_mode_people,
+	tier = BrowseTier.META,
+	inline = true,
+	children = listOf(actorsMode, directorsMode, writersMode),
 )
 
 // Children differ per collection type (critics' picks and the watch-again preset), so they are
@@ -309,8 +381,8 @@ private val qualityMode = BrowseModeDefinition(
 	label = R.string.lbl_browse_mode_quality,
 	icon = R.drawable.ic_star,
 	iconTint = R.color.browse_mode_hidden_gems,
-	destination = BrowseModeDestination.META_PICKER,
 	tier = BrowseTier.META,
+	inline = true,
 )
 
 private val movieBrowseModes = listOf(
@@ -324,6 +396,7 @@ private val movieBrowseModes = listOf(
 	moodToneMode,
 	storyMode,
 	worldStyleMode,
+	peopleMode,
 	timeMode,
 	qualityMode.copy(children = listOf(criticsPicksMode, hiddenGemsMode, ageRatingMode, watchAgainMovieMode)),
 	studiosMode,
@@ -341,6 +414,7 @@ private val seriesBrowseModes = listOf(
 	moodToneMode,
 	storyMode,
 	worldStyleMode,
+	peopleMode,
 	timeMode,
 	qualityMode.copy(children = listOf(hiddenGemsMode, ageRatingMode, watchAgainSeriesMode)),
 	networksMode,

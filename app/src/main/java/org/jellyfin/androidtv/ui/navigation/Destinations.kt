@@ -20,10 +20,13 @@ import org.jellyfin.androidtv.ui.browsing.browsemodes.DiscoverFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.GenreItemsFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.GenrePickerFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.MetaPickerFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.PersonListFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.StudioItemsFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.TagBrowseRowsFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.TagItemsFragment
 import org.jellyfin.androidtv.ui.browsing.browsemodes.TagPickerFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.YearItemsFragment
+import org.jellyfin.androidtv.ui.browsing.browsemodes.YearsPickerFragment
 import org.jellyfin.androidtv.ui.home.HomeFragment
 import org.jellyfin.androidtv.ui.itemdetail.FullDetailsFragment
 import org.jellyfin.androidtv.ui.itemdetail.ItemListFragment
@@ -146,11 +149,31 @@ object Destinations {
 	}
 
 	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun yearsPicker(item: BaseItemDto) = fragmentDestination<YearsPickerFragment> {
+		putString(Extras.Folder, Json.encodeToString(item))
+	}
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
 	fun libraryByDecadeItems(item: BaseItemDto, decadeStart: Int, includeType: String) =
 		fragmentDestination<DecadesItemsFragment> {
 			putString(Extras.Folder, Json.encodeToString(item))
 			putString(Extras.Tag, decadeStart.toString())
 			putString(Extras.IncludeType, includeType)
+		}
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun libraryByYearItems(item: BaseItemDto, year: Int, includeType: String) =
+		fragmentDestination<YearItemsFragment> {
+			putString(Extras.Folder, Json.encodeToString(item))
+			putString(Extras.Tag, year.toString())
+			putString(Extras.IncludeType, includeType)
+		}
+
+	// TODO only pass item id instead of complete JSON to browsing destinations
+	fun personList(item: BaseItemDto, personType: String) =
+		fragmentDestination<PersonListFragment> {
+			putString(Extras.Folder, Json.encodeToString(item))
+			putString(Extras.PersonType, personType)
 		}
 
 	// TODO only pass item id instead of complete JSON to browsing destinations

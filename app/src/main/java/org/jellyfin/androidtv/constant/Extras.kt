@@ -9,4 +9,5 @@ object Extras {
 	const val Tag = "tag"
 	const val Decade = "decade"
 	const val Rating = "rating"
+	const val PersonType = "person_type"
 }
