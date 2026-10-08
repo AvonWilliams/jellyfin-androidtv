@@ -86,4 +86,7 @@
     <color name="browse_mode_styles">#7E57C2</color>
     <color name="browse_mode_decades">#7E9CD8</color>
     <color name="browse_mode_age_rating">#9CCC65</color>
+
+    <!-- Browse mode tile background: translucent dark scrim matching the web rgba(58,58,58,0.79). -->
+    <color name="browse_mode_tile_background">#CA343434</color>
 </resources>

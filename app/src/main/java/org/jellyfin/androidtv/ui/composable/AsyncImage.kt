@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
@@ -39,6 +40,7 @@ fun AsyncImage(
 	aspectRatio: Float = 1f,
 	blurHashResolution: Int = 32,
 	scaleType: ImageView.ScaleType? = null,
+	colorFilter: ColorFilter? = null,
 ) {
 	val imageLoader = koinInject<ImageLoader>()
 	val contentScale = scaleType?.toContentScale() ?: ContentScale.Fit
@@ -76,6 +78,7 @@ fun AsyncImage(
 		placeholder = blurHashPlaceholder ?: placeholderPainter,
 		error = placeholderPainter,
 		contentScale = contentScale,
+		colorFilter = colorFilter,
 	)
 }
 

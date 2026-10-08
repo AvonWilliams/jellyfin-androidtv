@@ -67,5 +67,17 @@ class SystemPreferences(context: Context) : SharedPreferenceStore(
 		 * Whether to disable the "UI mode" warning that shows when using the app on non TV devices.
 		 */
 		val disableUiModeWarning = booleanPreference("disable_ui_mode_warning", false)
+
+		/**
+		 * The ranked data source (e.g. "tmdb") last selected for a ranked browse mode, keyed by the
+		 * mode's stable key (Trending, Top Rated). Empty until the user picks a source.
+		 */
+		fun browseSourcePreference(modeKey: String) = stringPreference("browse_source_$modeKey", "")
+
+		/**
+		 * Whether ranked discover lists show external titles that are not in the library. Defaults
+		 * on; hiding them never changes the server default, only this client's rendering.
+		 */
+		val showMissingTitles = booleanPreference("show_missing_titles", true)
 	}
 }

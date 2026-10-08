@@ -54,8 +54,7 @@ class AgeRatingPickerFragment : Fragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		title.value = getBrowseModes(folder.collectionType)
-			?.firstOrNull { it.mode == BrowseMode.AGE_RATING }
+		title.value = getBrowseModeDefinition(folder.collectionType, BrowseMode.AGE_RATING)
 			?.label
 			?.let { getString(it) }
 			?: "Age Rating"

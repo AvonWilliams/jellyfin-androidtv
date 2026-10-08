@@ -1,12 +1,17 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -23,6 +28,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +50,8 @@ internal fun TextListGrid(
 	title: String,
 	items: List<BaseItemDto>,
 	counts: Map<String, Int> = emptyMap(),
+	iconFor: ((BaseItemDto) -> Int?)? = null,
+	iconTint: Color = Color.Unspecified,
 	onItemClick: (BaseItemDto) -> Unit,
 ) {
 	val gridState = rememberLazyGridState()
@@ -71,6 +80,8 @@ internal fun TextListGrid(
 				val label = if (count != null) "${item.name.orEmpty()} ($count)" else item.name.orEmpty()
 				TextRow(
 					label,
+					icon = iconFor?.invoke(item),
+					iconTint = iconTint,
 					focusRequester = if (index == 0) firstItemFocusRequester else null,
 					onClick = { onItemClick(item) },
 				)
@@ -82,6 +93,8 @@ internal fun TextListGrid(
 @Composable
 private fun TextRow(
 	label: String,
+	icon: Int?,
+	iconTint: Color,
 	focusRequester: FocusRequester?,
 	onClick: () -> Unit,
 ) {
@@ -97,12 +110,26 @@ private fun TextRow(
 			.background(if (focused) Color(0x33FFFFFF) else Color.Transparent),
 		contentAlignment = Alignment.Center,
 	) {
-		Text(
-			text = label,
-			fontSize = 16.sp,
-			color = Color.White,
-			textAlign = TextAlign.Center,
+		Row(
+			verticalAlignment = Alignment.CenterVertically,
 			modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
-		)
+		) {
+			if (icon != null) {
+				Image(
+					painter = painterResource(icon),
+					contentDescription = null,
+					colorFilter = ColorFilter.tint(iconTint),
+					modifier = Modifier.size(24.dp),
+				)
+				Spacer(modifier = Modifier.width(8.dp))
+			}
+
+			Text(
+				text = label,
+				fontSize = 16.sp,
+				color = Color.White,
+				textAlign = TextAlign.Center,
+			)
+		}
 	}
 }
