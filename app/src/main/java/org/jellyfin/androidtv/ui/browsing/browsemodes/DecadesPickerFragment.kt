@@ -16,6 +16,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
+import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.navigation.Destinations
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
@@ -52,11 +53,7 @@ class DecadesPickerFragment : Fragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		title.value = getBrowseModes(folder.collectionType)
-			?.firstOrNull { it.mode == BrowseMode.DECADES }
-			?.label
-			?.let { getString(it) }
-			?: "Decades"
+		title.value = getString(R.string.lbl_browse_mode_decades)
 	}
 
 	override fun onCreateView(

@@ -3,11 +3,9 @@ package org.jellyfin.androidtv.ui.browsing.browsemodes
 import android.os.Bundle
 import androidx.leanback.app.VerticalGridSupportFragment
 import androidx.leanback.widget.ArrayObjectAdapter
-import androidx.leanback.widget.ClassPresenterSelector
 import androidx.leanback.widget.OnItemViewClickedListener
 import androidx.leanback.widget.VerticalGridPresenter
 import kotlinx.serialization.json.Json
-import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.preference.PreferencesRepository
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
@@ -15,12 +13,11 @@ import org.jellyfin.sdk.model.api.BaseItemDto
 import org.koin.android.ext.android.inject
 
 /**
- * The grid of tiles shown when a library is opened, each tile a way of browsing that library.
+ * The secondary choices of a meta browse mode, e.g. "Story" opens Story Themes + Plot Elements.
  *
- * The primary actions (All, Trending, Top Rated, New Releases, Just Added, Random) come first,
- * followed by a "Browse by…" section of meta tiles that open pickers or a secondary choice grid.
+ * Each choice is an existing mode, so tapping one reuses [openBrowseMode] and the flows it reaches.
  */
-class BrowseModesFragment : VerticalGridSupportFragment() {
+class MetaPickerFragment : VerticalGridSupportFragment() {
 	private companion object {
 		const val COLUMNS = 4
 	}
@@ -29,26 +26,23 @@ class BrowseModesFragment : VerticalGridSupportFragment() {
 	private val preferencesRepository by inject<PreferencesRepository>()
 
 	private lateinit var folder: BaseItemDto
+	private lateinit var children: List<BrowseModeDefinition>
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
 		folder = Json.decodeFromString<BaseItemDto>(requireArguments().getString(Extras.Folder)!!)
-		title = folder.name
+		val modeKey = requireArguments().getString(Extras.BrowseMode)!!
+		val mode = BrowseMode.entries.first { it.key == modeKey }
+		val definition = getBrowseModeDefinition(folder.collectionType, mode)
+
+		children = definition?.children.orEmpty()
+		title = definition?.label?.let { getString(it) } ?: modeKey
 
 		setGridPresenter(VerticalGridPresenter().apply { numberOfColumns = COLUMNS })
 
-		val presenterSelector = ClassPresenterSelector()
-			.addClassPresenter(BrowseModeTile::class.java, BrowseModeTilePresenter())
-			.addClassPresenter(BrowseModeHeader::class.java, BrowseModeHeaderPresenter())
-
-		adapter = ArrayObjectAdapter(presenterSelector).apply {
-			val (primary, meta) = getBrowseModes(folder.collectionType).orEmpty()
-				.partition { it.tier == BrowseTier.PRIMARY }
-
-			primary.forEach { add(BrowseModeTile(it, getString(it.label))) }
-			add(BrowseModeHeader(getString(R.string.lbl_browse_by)))
-			meta.forEach { add(BrowseModeTile(it, getString(it.label))) }
+		adapter = ArrayObjectAdapter(BrowseModeTilePresenter()).apply {
+			children.forEach { child -> add(BrowseModeTile(child, getString(child.label))) }
 		}
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->

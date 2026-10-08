@@ -56,7 +56,7 @@ class TagPickerFragment : Fragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		val label = getBrowseModes(folder.collectionType)?.firstOrNull { it.mode == mode }?.label
+		val label = getBrowseModeDefinition(folder.collectionType, mode)?.label
 		title.value = label?.let { getString(it) } ?: mode.key
 	}
 

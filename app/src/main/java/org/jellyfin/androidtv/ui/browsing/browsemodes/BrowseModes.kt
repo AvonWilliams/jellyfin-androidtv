@@ -37,6 +37,16 @@ enum class BrowseMode(val key: String) {
 	STYLES("styles"),
 	DECADES("decades"),
 	AGE_RATING("agerating"),
+	STORY("story"),
+	WORLD_STYLE("worldstyle"),
+	QUALITY("quality"),
+	TIME("time"),
+}
+
+/** Which section of the browse-modes home a tile belongs to. */
+enum class BrowseTier {
+	PRIMARY,
+	META,
 }
 
 /**
@@ -64,6 +74,10 @@ data class BrowseModeDefinition(
 	val preset: BrowsePreset? = null,
 	/** Opens an existing screen rather than the item grid. */
 	val destination: BrowseModeDestination? = null,
+	/** Home section placement: primary actions vs the "Browse by…" meta section. */
+	val tier: BrowseTier = BrowseTier.PRIMARY,
+	/** For a [BrowseModeDestination.META_PICKER] tile: the choices, each an existing mode. */
+	val children: List<BrowseModeDefinition>? = null,
 )
 
 /** Screens reachable from a tile that are not the item grid. */
@@ -82,6 +96,9 @@ enum class BrowseModeDestination {
 
 	/** A grid of age ratings to filter by. */
 	AGE_RATING_PICKER,
+
+	/** A secondary grid of choices, held in the tile's [BrowseModeDefinition.children]. */
+	META_PICKER,
 }
 
 /**
@@ -116,6 +133,7 @@ private val genresMode = BrowseModeDefinition(
 	icon = R.drawable.ic_masks,
 	iconTint = R.color.browse_mode_genres,
 	destination = BrowseModeDestination.GENRES,
+	tier = BrowseTier.META,
 )
 
 private val studiosMode = BrowseModeDefinition(
@@ -124,6 +142,7 @@ private val studiosMode = BrowseModeDefinition(
 	icon = R.drawable.ic_clapperboard,
 	iconTint = R.color.browse_mode_studios,
 	destination = BrowseModeDestination.STUDIOS,
+	tier = BrowseTier.META,
 )
 
 // Series libraries call the same thing networks.
@@ -189,12 +208,13 @@ private val criticsPicksMode = BrowseModeDefinition(
 	preset = BrowsePreset(ItemSortBy.CRITIC_RATING, SortOrder.DESCENDING),
 )
 
-private val moodMode = BrowseModeDefinition(
+private val moodToneMode = BrowseModeDefinition(
 	mode = BrowseMode.MOOD,
-	label = R.string.lbl_browse_mode_mood,
+	label = R.string.lbl_browse_mode_mood_tone,
 	icon = R.drawable.ic_mood,
 	iconTint = R.color.browse_mode_mood,
 	destination = BrowseModeDestination.TAG_PICKER,
+	tier = BrowseTier.META,
 )
 
 private val storyThemesMode = BrowseModeDefinition(
@@ -229,14 +249,6 @@ private val stylesMode = BrowseModeDefinition(
 	destination = BrowseModeDestination.TAG_PICKER,
 )
 
-private val decadesMode = BrowseModeDefinition(
-	mode = BrowseMode.DECADES,
-	label = R.string.lbl_browse_mode_decades,
-	icon = R.drawable.ic_calendar,
-	iconTint = R.color.browse_mode_decades,
-	destination = BrowseModeDestination.DECADES_PICKER,
-)
-
 private val ageRatingMode = BrowseModeDefinition(
 	mode = BrowseMode.AGE_RATING,
 	label = R.string.lbl_browse_mode_age_rating,
@@ -259,46 +271,79 @@ private val watchAgainSeriesMode = watchAgainMovieMode.copy(
 	preset = BrowsePreset(ItemSortBy.SERIES_DATE_PLAYED, SortOrder.DESCENDING),
 )
 
+// The "Browse by…" meta tiles. Each opens an existing flow: either a single picker/shelf directly,
+// or a secondary grid of the modes listed in [children].
+private val storyMode = BrowseModeDefinition(
+	mode = BrowseMode.STORY,
+	label = R.string.lbl_browse_mode_story,
+	icon = R.drawable.ic_book,
+	iconTint = R.color.browse_mode_story_themes,
+	destination = BrowseModeDestination.META_PICKER,
+	tier = BrowseTier.META,
+	children = listOf(storyThemesMode, plotElementsMode),
+)
+
+private val worldStyleMode = BrowseModeDefinition(
+	mode = BrowseMode.WORLD_STYLE,
+	label = R.string.lbl_browse_mode_world_style,
+	icon = R.drawable.ic_world,
+	iconTint = R.color.browse_mode_worlds,
+	destination = BrowseModeDestination.META_PICKER,
+	tier = BrowseTier.META,
+	children = listOf(worldsMode, stylesMode),
+)
+
+private val timeMode = BrowseModeDefinition(
+	mode = BrowseMode.TIME,
+	label = R.string.lbl_browse_mode_time,
+	icon = R.drawable.ic_calendar,
+	iconTint = R.color.browse_mode_decades,
+	destination = BrowseModeDestination.DECADES_PICKER,
+	tier = BrowseTier.META,
+)
+
+// Children differ per collection type (critics' picks and the watch-again preset), so they are
+// attached when the per-type list is built.
+private val qualityMode = BrowseModeDefinition(
+	mode = BrowseMode.QUALITY,
+	label = R.string.lbl_browse_mode_quality,
+	icon = R.drawable.ic_star,
+	iconTint = R.color.browse_mode_hidden_gems,
+	destination = BrowseModeDestination.META_PICKER,
+	tier = BrowseTier.META,
+)
+
 private val movieBrowseModes = listOf(
 	allMode,
-	newReleasesMode,
-	justAddedMode,
 	trendingMode,
 	topRatedMode,
-	genresMode,
-	decadesMode,
-	criticsPicksMode,
-	hiddenGemsMode,
-	moodMode,
-	storyThemesMode,
-	plotElementsMode,
-	worldsMode,
-	stylesMode,
+	newReleasesMode,
+	justAddedMode,
 	randomMode,
-	watchAgainMovieMode,
+	genresMode,
+	moodToneMode,
+	storyMode,
+	worldStyleMode,
+	timeMode,
+	qualityMode.copy(children = listOf(criticsPicksMode, hiddenGemsMode, ageRatingMode, watchAgainMovieMode)),
 	studiosMode,
-	ageRatingMode,
 )
 
 // Critics' picks is left out because almost no series carry a critic rating.
 private val seriesBrowseModes = listOf(
 	allMode,
-	newReleasesMode,
-	justAddedMode,
 	trendingMode,
 	topRatedMode,
-	genresMode,
-	decadesMode,
-	hiddenGemsMode,
-	moodMode,
-	storyThemesMode,
-	plotElementsMode,
-	worldsMode,
-	stylesMode,
+	newReleasesMode,
+	justAddedMode,
 	randomMode,
-	watchAgainSeriesMode,
+	genresMode,
+	moodToneMode,
+	storyMode,
+	worldStyleMode,
+	timeMode,
+	qualityMode.copy(children = listOf(hiddenGemsMode, ageRatingMode, watchAgainSeriesMode)),
 	networksMode,
-	ageRatingMode,
 )
 
 /**
@@ -310,3 +355,12 @@ fun getBrowseModes(collectionType: CollectionType?) = when (collectionType) {
 	CollectionType.TVSHOWS -> seriesBrowseModes
 	else -> null
 }
+
+/**
+ * Resolves a mode by key anywhere on the home grid, including the children of meta tiles, so
+ * screens reached through a meta tile (e.g. Story Themes) can still look up their label.
+ */
+fun getBrowseModeDefinition(collectionType: CollectionType?, mode: BrowseMode): BrowseModeDefinition? =
+	getBrowseModes(collectionType)
+		?.flatMap { listOf(it) + it.children.orEmpty() }
+		?.firstOrNull { it.mode == mode }

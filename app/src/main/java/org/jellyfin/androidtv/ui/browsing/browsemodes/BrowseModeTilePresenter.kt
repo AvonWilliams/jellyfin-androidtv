@@ -25,6 +25,29 @@ import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.base.Text
 
 /**
+ * Wraps a ComposeView so it can be measured by a leanback grid presenter without crashing.
+ * Presenters that host Compose content need this to survive [androidx.leanback.widget.Presenter]
+ * view recycling.
+ */
+private class ComposeViewWrapper(
+	composeView: ComposeView,
+	focusable: Boolean,
+) : FrameLayout(composeView.context) {
+	init {
+		isFocusable = focusable
+		isFocusableInTouchMode = focusable
+		descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+		addView(composeView)
+	}
+
+	// Hack to prevent Compose crash with leanback presenters
+	override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+		if (isAttachedToWindow) super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+		else setMeasuredDimension(widthMeasureSpec, heightMeasureSpec)
+	}
+}
+
+/**
  * Draws a browse mode as a wide tile with its name centred.
  *
  * Kept separate from [org.jellyfin.androidtv.ui.presentation.GridButtonPresenter], which sizes
@@ -39,24 +62,9 @@ class BrowseModeTilePresenter : Presenter() {
 		const val ICON_SIZE = 32
 	}
 
-	private class ComposeViewWrapper(composeView: ComposeView) : FrameLayout(composeView.context) {
-		init {
-			isFocusable = true
-			isFocusableInTouchMode = true
-			descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
-			addView(composeView)
-		}
-
-		// Hack to prevent Compose crash with leanback presenters
-		override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-			if (isAttachedToWindow) super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-			else setMeasuredDimension(widthMeasureSpec, heightMeasureSpec)
-		}
-	}
-
 	inner class ViewHolder(
 		private val composeView: ComposeView,
-	) : Presenter.ViewHolder(ComposeViewWrapper(composeView)) {
+	) : Presenter.ViewHolder(ComposeViewWrapper(composeView, focusable = true)) {
 		fun bind(tile: BrowseModeTile) = composeView.setContent {
 			Box(
 				contentAlignment = Alignment.Center,
@@ -102,8 +110,52 @@ class BrowseModeTilePresenter : Presenter() {
 	override fun onViewAttachedToWindow(viewHolder: Presenter.ViewHolder) = Unit
 }
 
+/** A non-interactive section label between the primary and meta tile groups. */
+class BrowseModeHeaderPresenter : Presenter() {
+	private companion object {
+		const val WIDTH = 200
+		const val HEIGHT = 112
+	}
+
+	inner class ViewHolder(
+		private val composeView: ComposeView,
+	) : Presenter.ViewHolder(ComposeViewWrapper(composeView, focusable = false)) {
+		fun bind(header: BrowseModeHeader) = composeView.setContent {
+			Box(
+				contentAlignment = Alignment.BottomStart,
+				modifier = Modifier
+					.size(WIDTH.dp, HEIGHT.dp)
+					.padding(horizontal = 4.dp)
+			) {
+				Text(
+					text = header.label,
+					color = colorResource(R.color.button_default_normal_text),
+					fontSize = 16.sp,
+				)
+			}
+		}
+	}
+
+	override fun onCreateViewHolder(parent: ViewGroup): ViewHolder =
+		ViewHolder(ComposeView(parent.context))
+
+	override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any?) {
+		if (viewHolder !is ViewHolder || item !is BrowseModeHeader) return
+
+		viewHolder.bind(item)
+	}
+
+	override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) = Unit
+	override fun onViewAttachedToWindow(viewHolder: Presenter.ViewHolder) = Unit
+}
+
 /** A single tile in the browse modes grid. */
 data class BrowseModeTile(
 	val definition: BrowseModeDefinition,
+	val label: String,
+)
+
+/** A section header in the browse modes grid. */
+data class BrowseModeHeader(
 	val label: String,
 )
