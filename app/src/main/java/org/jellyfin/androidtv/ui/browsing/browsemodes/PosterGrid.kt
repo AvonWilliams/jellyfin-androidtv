@@ -5,12 +5,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -24,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -53,6 +56,17 @@ import org.koin.compose.koinInject
 
 const val POSTER_COLUMNS = 7
 
+/**
+ * A single ranked grid entry: either an in-library item or an external missing-title stub. Both
+ * carry their source rank so the two groups can be interleaved into one rank-ordered sequence.
+ */
+private sealed interface RankedEntry {
+	val rank: Int
+
+	data class Item(val item: BaseItemDto, override val rank: Int) : RankedEntry
+	data class Stub(val stub: MissingTitleDto, override val rank: Int) : RankedEntry
+}
+
 /** A poster grid with a legacy-style detail header, rendered Compose-native. */
 @Composable
 internal fun PosterGrid(
@@ -72,9 +86,22 @@ internal fun PosterGrid(
 	var focusedItem by remember { mutableStateOf<BaseItemDto?>(null) }
 	val firstItemFocusRequester = remember { FocusRequester() }
 
+	// Interleave in-library items and external missing stubs into a single rank-ordered
+	// sequence, so a stub with rank N renders at position N in the grid.
+	val entries = remember(items, missing) {
+		buildList<RankedEntry> {
+			items.forEach { item ->
+				add(RankedEntry.Item(item, item.indexNumber?.takeIf { it > 0 } ?: Int.MAX_VALUE))
+			}
+			missing.forEach { stub ->
+				add(RankedEntry.Stub(stub, stub.rank.takeIf { it > 0 } ?: Int.MAX_VALUE))
+			}
+		}.sortedBy { it.rank }
+	}
+
 	// Focus the first card so a single DPAD center press activates it immediately.
-	LaunchedEffect(items.isNotEmpty() || missing.isNotEmpty()) {
-		if (items.isNotEmpty() || missing.isNotEmpty()) firstItemFocusRequester.requestFocus()
+	LaunchedEffect(entries.isNotEmpty()) {
+		if (entries.isNotEmpty()) firstItemFocusRequester.requestFocus()
 	}
 
 	// Prefetch posters ahead of the scroll so images are ready when they come into view.
@@ -107,35 +134,34 @@ internal fun PosterGrid(
 		}
 
 		Box(modifier = Modifier.fillMaxSize()) {
+			val firstItemIndex = entries.indexOfFirst { it is RankedEntry.Item }
+
 			LazyVerticalGrid(
 				columns = GridCells.Fixed(POSTER_COLUMNS),
 				state = gridState,
 				modifier = Modifier.fillMaxSize(),
 				verticalArrangement = Arrangement.spacedBy(4.dp),
 			) {
-				itemsIndexed(items) { index, item ->
-					PosterCard(
-						item,
-						imageHelper,
-						api,
-						showRankBadge,
-						focusRequester = if (index == 0) firstItemFocusRequester else null,
-						onFocus = { focusedItem = item },
-						onClick = { onItemClick(item) },
-					)
-				}
-
-				// External titles not in the library, rendered after the in-library items as
-				// dimmed, non-clickable "coming soon" tiles.
-				itemsIndexed(missing) { index, stub ->
-					ComingSoonCard(
-						stub,
-						focusRequester = if (items.isEmpty() && index == 0) firstItemFocusRequester else null,
-					)
+				itemsIndexed(entries) { index, entry ->
+					when (entry) {
+						is RankedEntry.Item -> PosterCard(
+							item = entry.item,
+							imageHelper = imageHelper,
+							api = api,
+							showRankBadge = showRankBadge,
+							focusRequester = if (index == firstItemIndex) firstItemFocusRequester else null,
+							onFocus = { focusedItem = entry.item },
+							onClick = { onItemClick(entry.item) },
+						)
+						is RankedEntry.Stub -> ComingSoonCard(
+							stub = entry.stub,
+							focusRequester = null,
+						)
+					}
 				}
 			}
 
-			if (items.isEmpty() && missing.isEmpty()) {
+			if (entries.isEmpty()) {
 				emptyMessage?.let { message ->
 					Text(
 						text = message,
@@ -239,8 +265,8 @@ private fun PosterCard(
 
 /**
  * A tile for an external title that is not in the library: the source poster desaturated and
- * dimmed, a "Coming soon" banner, and the active source's rank badge. Deliberately not clickable —
- * a missing title has no detail or play navigation.
+ * dimmed, a diagonal "Coming soon" ribbon, and the active source's rank badge. Deliberately not
+ * clickable or focusable — a missing title has no detail or play navigation.
  */
 @Composable
 private fun ComingSoonCard(
@@ -273,7 +299,7 @@ private fun ComingSoonCard(
 				Box(
 					modifier = Modifier
 						.fillMaxSize()
-						.background(Color(0x66000000)),
+						.background(Color(0x80000000)),
 				)
 
 				if (stub.rank > 0) {
@@ -285,20 +311,28 @@ private fun ComingSoonCard(
 					)
 				}
 
-				Box(
-					modifier = Modifier
-						.align(Alignment.Center)
-						.fillMaxWidth()
-						.background(Color(0xB3000000))
-						.padding(vertical = 4.dp),
+				// A diagonal ribbon across the poster: a strip 119% of the card width, centered and
+				// rotated to the 2:3 portrait diagonal angle (~56.31deg), spans ~66% of the full
+				// corner-to-corner diagonal. Mirrors the web client's coming-soon banner.
+				BoxWithConstraints(
+					modifier = Modifier.fillMaxSize(),
 					contentAlignment = Alignment.Center,
 				) {
-					Text(
-						text = stringResource(R.string.coming_soon),
-						fontSize = 11.sp,
-						color = Color.White,
-						textAlign = TextAlign.Center,
-					)
+					Box(
+						modifier = Modifier
+							.requiredWidth(maxWidth * 1.19f)
+							.rotate(56.31f)
+							.background(Color(0xD9000000))
+							.padding(horizontal = 8.dp, vertical = 4.dp),
+						contentAlignment = Alignment.Center,
+					) {
+						Text(
+							text = stringResource(R.string.coming_soon),
+							fontSize = 11.sp,
+							color = Color.White,
+							textAlign = TextAlign.Center,
+						)
+					}
 				}
 
 				stub.title.ifBlank { null }?.let { title ->

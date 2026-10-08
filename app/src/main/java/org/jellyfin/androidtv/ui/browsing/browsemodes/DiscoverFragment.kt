@@ -60,7 +60,8 @@ import timber.log.Timber
  * fetched as a raw request. The server matches the active source's ranking against what the
  * library owns, so the result is short and already ordered — no paging. The source bar is kept
  * mounted while the grid refreshes, so switching sources re-fetches in place. External titles not
- * in the library are surfaced as non-clickable "coming soon" stubs after the in-library items.
+ * in the library are surfaced as non-clickable "coming soon" stubs, interleaved with the in-library
+ * items by their source rank.
  */
 class DiscoverFragment : Fragment() {
 	private companion object {
