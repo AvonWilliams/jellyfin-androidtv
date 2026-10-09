@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -138,7 +139,7 @@ private fun BrowseModesGrid(
 		verticalArrangement = Arrangement.spacedBy(8.dp),
 	) {
 		item(key = "library-heading", span = { GridItemSpan(maxLineSpan) }) {
-			BrowseModeHeading(title, fontSize = 30.sp)
+			BrowseModeHeading(title, fontSize = 30.sp, variant = HeadingVariant.MAIN)
 		}
 
 		itemsIndexed(primary, key = { _, tile -> tile.definition.mode.key }) { index, tile ->
@@ -155,7 +156,7 @@ private fun BrowseModesGrid(
 
 		inline.forEach { section ->
 			item(key = "inline-heading-${section.label}", span = { GridItemSpan(maxLineSpan) }) {
-				BrowseModeHeading(section.label, fontSize = 18.sp)
+				BrowseModeHeading(section.label, fontSize = 18.sp, variant = HeadingVariant.SUBHEADING)
 			}
 
 			itemsIndexed(section.children, key = { _, tile -> tile.definition.mode.key }) { _, tile ->
@@ -175,20 +176,31 @@ private fun BrowseModesGrid(
 	}
 }
 
-/** A full-width, non-focusable section heading on a dark translucent bar, matching the web's heading bars. */
+/** Heading prominence levels, mirroring the web's main / section / sub-heading glass treatment. */
+private enum class HeadingVariant(val radius: Dp, val weight: FontWeight, val alpha: Float) {
+	MAIN(8.dp, FontWeight.Medium, 0.50f),
+	SECTION(7.dp, FontWeight.Normal, 0.35f),
+	SUBHEADING(6.dp, FontWeight.Normal, 0.35f),
+}
+
+/** A full-width, non-focusable section heading on a translucent glass bar, matching the web's heading bars. */
 @Composable
-private fun BrowseModeHeading(text: String, fontSize: TextUnit = 22.sp) {
+private fun BrowseModeHeading(
+	text: String,
+	fontSize: TextUnit = 22.sp,
+	variant: HeadingVariant = HeadingVariant.SECTION,
+) {
 	Text(
 		text = text,
 		fontSize = fontSize,
-		fontWeight = FontWeight.Bold,
+		fontWeight = variant.weight,
 		color = Color.White,
 		textAlign = TextAlign.Center,
 		modifier = Modifier
 			.fillMaxWidth()
-			.clip(RoundedCornerShape(2.dp))
-			.background(Color(0x73181818))
-			.border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(2.dp))
+			.clip(RoundedCornerShape(variant.radius))
+			.background(BrowseGlass.surface(variant.alpha))
+			.border(1.dp, BrowseGlass.border, RoundedCornerShape(variant.radius))
 			.padding(horizontal = 12.dp, vertical = 8.dp),
 	)
 }

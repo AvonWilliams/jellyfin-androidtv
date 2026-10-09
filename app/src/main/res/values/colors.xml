@@ -89,7 +89,4 @@
     <color name="browse_mode_people">#9CCC65</color>
     <color name="browse_mode_directors">#4DD0C4</color>
     <color name="browse_mode_writers">#F2C14E</color>
-
-    <!-- Browse mode tile background: translucent dark scrim matching the web rgba(20,20,20,0.7). -->
-    <color name="browse_mode_tile_background">#B2141414</color>
 </resources>

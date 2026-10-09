@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.leanback.widget.Presenter
@@ -48,6 +49,17 @@ private const val META_TILE_WIDTH = 110
 private const val META_TILE_HEIGHT = 62
 private const val META_ICON_SIZE = 38
 private const val META_LABEL_SIZE = 16
+
+/** Shared glass surface colours, matching the web's `--jf-palette-background-paperChannel`
+ *  (#202020) and divider border (`rgba(255, 255, 255, 0.12)`). */
+internal object BrowseGlass {
+	val base = Color(0xFF202020)
+	val border = Color(0x1FFFFFFF)
+
+	fun surface(alpha: Float) = base.copy(alpha = alpha)
+}
+
+private fun tileRadius(small: Boolean): Dp = if (small) 8.dp else 10.dp
 
 /**
  * Wraps a ComposeView so it can be measured by a leanback grid presenter without crashing.
@@ -82,14 +94,15 @@ internal fun BrowseModeTileContent(
 	val height = if (tile.small) META_TILE_HEIGHT else TILE_HEIGHT
 	val iconSize = if (tile.small) META_ICON_SIZE else ICON_SIZE
 	val labelSize = if (tile.small) META_LABEL_SIZE else LABEL_SIZE
+	val radius = tileRadius(tile.small)
 
 	Box(
 		contentAlignment = Alignment.Center,
 		modifier = modifier
 			.size(width.dp, height.dp)
-			.clip(RoundedCornerShape(4.dp))
-			.background(colorResource(R.color.browse_mode_tile_background))
-			.border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(4.dp)),
+			.clip(RoundedCornerShape(radius))
+			.background(BrowseGlass.surface(if (tile.small) 0.70f else 0.60f))
+			.border(1.dp, BrowseGlass.border, RoundedCornerShape(radius)),
 	) {
 		Column(
 			horizontalAlignment = Alignment.CenterHorizontally,
@@ -134,7 +147,7 @@ internal fun BrowseModeTileCard(
 	) {
 		BrowseModeTileContent(
 			tile = tile,
-			modifier = if (focused) Modifier.border(3.dp, Color.White, RoundedCornerShape(4.dp)) else Modifier,
+			modifier = if (focused) Modifier.border(3.dp, Color.White, RoundedCornerShape(tileRadius(tile.small))) else Modifier,
 		)
 	}
 }
