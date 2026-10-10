@@ -24,6 +24,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -50,7 +51,7 @@ internal fun BrowseSourceBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         sources.forEachIndexed { index, source ->
@@ -68,6 +69,7 @@ internal fun BrowseSourceBar(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
                     .width(84.dp)
+                    .then(if (focused) Modifier.graphicsLayer { scaleX = 1.1f; scaleY = 1.1f } else Modifier)
                     .then(if (index == 0 && focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                     .onFocusChanged { focused = it.isFocused }
                     .clickable { onSelect(source.id) },
@@ -81,7 +83,7 @@ internal fun BrowseSourceBar(
                             tileBorderColor,
                             RoundedCornerShape(12.dp),
                         )
-                        .background(Color.White, RoundedCornerShape(12.dp)),
+                        .background(if (active) Color(0xFF202020) else Color.White, RoundedCornerShape(12.dp)),
                 ) {
                     sourceLogo(source.id)?.let { logo ->
                         Image(

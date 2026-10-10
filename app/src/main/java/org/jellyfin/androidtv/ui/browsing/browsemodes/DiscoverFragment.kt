@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -294,6 +296,8 @@ private fun TrendingWindowChips(
 				fontSize = 14.sp,
 				color = if (active) accent else LocalColorScheme.current.listCaption,
 				modifier = Modifier
+					.then(if (focused) Modifier.graphicsLayer { scaleX = 1.1f; scaleY = 1.1f } else Modifier)
+					.then(if (active) Modifier.background(Color(0xFF202020), RoundedCornerShape(16.dp)) else Modifier)
 					.border(
 						width = if (focused || active) 2.dp else 1.dp,
 						color = borderColor,
