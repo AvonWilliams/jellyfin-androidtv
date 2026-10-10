@@ -117,6 +117,15 @@ internal fun PosterGrid(
 			}
 	}
 
+	// Eagerly prefetch stub posters once the stub list arrives: the scroll loop above only covers
+	// library items, and the stub count per source is small. Mirrors the web client dropping
+	// lazy loading for coming-soon posters.
+	LaunchedEffect(missing) {
+		missing.mapNotNull { it.posterUrl.ifBlank { null } }.forEach { url ->
+			imageLoader.enqueue(ImageRequest.Builder(context).data(url).build())
+		}
+	}
+
 	Column(modifier = Modifier.fillMaxSize()) {
 		// Header: big title (library, or the focused item) + detail info row.
 		Text(
@@ -143,7 +152,15 @@ internal fun PosterGrid(
 				modifier = Modifier.fillMaxSize(),
 				verticalArrangement = Arrangement.spacedBy(4.dp),
 			) {
-				itemsIndexed(entries) { index, entry ->
+				itemsIndexed(
+					items = entries,
+					key = { _, entry ->
+						when (entry) {
+							is RankedEntry.Item -> entry.item.id.toString()
+							is RankedEntry.Stub -> "missing-${entry.stub.source}-${entry.stub.rank}-${entry.stub.title}"
+						}
+					},
+				) { index, entry ->
 					when (entry) {
 						is RankedEntry.Item -> PosterCard(
 							item = entry.item,
