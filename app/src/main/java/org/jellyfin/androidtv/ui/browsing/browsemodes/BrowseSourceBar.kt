@@ -69,7 +69,7 @@ internal fun BrowseSourceBar(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
                     .width(84.dp)
-                    .then(if (focused) Modifier.graphicsLayer { scaleX = 1.1f; scaleY = 1.1f } else Modifier)
+                    .then(if (focused) Modifier.graphicsLayer { scaleX = 1.15f; scaleY = 1.15f } else Modifier)
                     .then(if (index == 0 && focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                     .onFocusChanged { focused = it.isFocused }
                     .clickable { onSelect(source.id) },
@@ -83,7 +83,7 @@ internal fun BrowseSourceBar(
                             tileBorderColor,
                             RoundedCornerShape(12.dp),
                         )
-                        .background(if (active) Color(0xFF202020) else Color.White, RoundedCornerShape(12.dp)),
+                        .background(if (active) Color(0xFF0A0A0A) else Color.White, RoundedCornerShape(12.dp)),
                 ) {
                     sourceLogo(source.id)?.let { logo ->
                         Image(

@@ -215,6 +215,7 @@ class DiscoverFragment : Fragment() {
 
 		if (!isAdded) return@launch
 
+		Timber.d("Discover %s source=%s window=%s items=%d missing=%d", path, source, queryParameters["window"], result.items.size, result.missing.size)
 		items.value = result.items
 		missing.value = result.missing
 		loaded.value = true
@@ -296,8 +297,8 @@ private fun TrendingWindowChips(
 				fontSize = 14.sp,
 				color = if (active) accent else LocalColorScheme.current.listCaption,
 				modifier = Modifier
-					.then(if (focused) Modifier.graphicsLayer { scaleX = 1.1f; scaleY = 1.1f } else Modifier)
-					.then(if (active) Modifier.background(Color(0xFF202020), RoundedCornerShape(16.dp)) else Modifier)
+					.then(if (focused) Modifier.graphicsLayer { scaleX = 1.15f; scaleY = 1.15f } else Modifier)
+					.then(if (active) Modifier.background(Color(0xFF0A0A0A), RoundedCornerShape(16.dp)) else Modifier)
 					.border(
 						width = if (focused || active) 2.dp else 1.dp,
 						color = borderColor,
