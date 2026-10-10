@@ -112,7 +112,7 @@ class DiscoverFragment : Fragment() {
 			JellyfinTheme {
 				Column(modifier = Modifier.fillMaxSize()) {
 					BrowseSourceBar(
-						sources = ENABLED_BROWSE_SOURCES,
+						sources = getEnabledSources(mode, folder.collectionType == CollectionType.TVSHOWS),
 						activeSource = activeSource.value,
 						onSelect = ::selectSource,
 						focusRequester = sourceBarFocusRequester,
