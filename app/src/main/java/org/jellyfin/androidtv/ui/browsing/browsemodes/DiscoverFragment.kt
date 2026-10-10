@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,6 +41,7 @@ import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.data.repository.ItemRepository
 import org.jellyfin.androidtv.preference.SystemPreferences
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
+import org.jellyfin.androidtv.ui.base.LocalColorScheme
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.base.form.Checkbox
 import org.jellyfin.androidtv.ui.itemhandling.BaseItemDtoBaseRowItem
@@ -66,6 +68,7 @@ import timber.log.Timber
 class DiscoverFragment : Fragment() {
 	private companion object {
 		const val LIMIT = 500
+		const val DEFAULT_BROWSE_WINDOW = "week"
 	}
 
 	private val apiClient by inject<ApiClient>()
@@ -76,11 +79,13 @@ class DiscoverFragment : Fragment() {
 	private lateinit var folder: BaseItemDto
 	private lateinit var mode: BrowseMode
 	private lateinit var sourcePreference: Preference<String>
+	private lateinit var windowPreference: Preference<String>
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private val missing = mutableStateOf<List<MissingTitleDto>>(emptyList())
 	private val showMissing = mutableStateOf(true)
 	private val activeSource = mutableStateOf(DEFAULT_BROWSE_SOURCE)
+	private val activeWindow = mutableStateOf(DEFAULT_BROWSE_WINDOW)
 	private val loaded = mutableStateOf(false)
 	private var emptyMessage: String = ""
 
@@ -95,7 +100,9 @@ class DiscoverFragment : Fragment() {
 		mode = BrowseMode.entries.first { it.key == requireArguments().getString(Extras.BrowseMode) }
 
 		sourcePreference = SystemPreferences.browseSourcePreference(mode.key)
+		windowPreference = SystemPreferences.browseWindowPreference(mode.key)
 		activeSource.value = systemPreferences[sourcePreference].ifBlank { DEFAULT_BROWSE_SOURCE }
+		activeWindow.value = systemPreferences[windowPreference].ifBlank { DEFAULT_BROWSE_WINDOW }
 		showMissing.value = systemPreferences[SystemPreferences.showMissingTitles]
 		emptyMessage = getString(R.string.msg_no_items_in_category)
 
@@ -111,6 +118,12 @@ class DiscoverFragment : Fragment() {
 		setContent {
 			JellyfinTheme {
 				Column(modifier = Modifier.fillMaxSize()) {
+					if (mode == BrowseMode.TRENDING) {
+						TrendingWindowChips(
+							activeWindow = activeWindow.value,
+							onSelect = ::selectWindow,
+						)
+					}
 					BrowseSourceBar(
 						sources = getEnabledSources(mode, folder.collectionType == CollectionType.TVSHOWS),
 						activeSource = activeSource.value,
@@ -161,6 +174,14 @@ class DiscoverFragment : Fragment() {
 		load()
 	}
 
+	private fun selectWindow(value: String) {
+		if (value == activeWindow.value) return
+
+		activeWindow.value = value
+		systemPreferences[windowPreference] = value
+		load()
+	}
+
 	private fun toggleShowMissing() {
 		val next = !showMissing.value
 		showMissing.value = next
@@ -170,17 +191,19 @@ class DiscoverFragment : Fragment() {
 	private fun load() = lifecycleScope.launch {
 		val source = activeSource.value
 		val path = discoverPath(mode, folder.collectionType)
+		val queryParameters = mutableMapOf(
+			"userId" to userRepository.currentUser.value?.id,
+			"parentId" to folder.id,
+			"fields" to ItemRepository.itemFields.joinToString(",") { it.serialName },
+			"limit" to LIMIT,
+			"source" to source,
+		)
+		if (mode == BrowseMode.TRENDING) queryParameters["window"] = activeWindow.value
 		val result = try {
 			withContext(Dispatchers.IO) {
 				apiClient.get<DiscoverRankedResult>(
 					pathTemplate = path,
-					queryParameters = mapOf(
-						"userId" to userRepository.currentUser.value?.id,
-						"parentId" to folder.id,
-						"fields" to ItemRepository.itemFields.joinToString(",") { it.serialName },
-						"limit" to LIMIT,
-						"source" to source,
-					),
+					queryParameters = queryParameters,
 				).content
 			}
 		} catch (error: Exception) {
@@ -231,5 +254,55 @@ private fun ShowMissingToggle(
 			fontSize = 14.sp,
 			color = Color(0xCCFFFFFF),
 		)
+	}
+}
+
+/** The trending window choices, mirroring the web Day / Week / Month picker. */
+private val trendingWindows = listOf("day" to "Day", "week" to "Week", "month" to "Month")
+
+/**
+ * A compact, focusable Day | Week | Month chip row shown above the source bar on Trending.
+ *
+ * Selecting a chip persists the window and re-fetches in place, exactly like switching sources.
+ * Styled lighter than the source tiles: bordered text chips with the Trending accent on the
+ * active one and the white focus ring this app uses for d-pad focus.
+ */
+@Composable
+private fun TrendingWindowChips(
+	activeWindow: String,
+	onSelect: (String) -> Unit,
+) {
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(horizontal = 16.dp, vertical = 4.dp),
+		horizontalArrangement = Arrangement.spacedBy(8.dp),
+	) {
+		trendingWindows.forEach { (value, label) ->
+			val active = value == activeWindow
+			var focused by remember(value) { mutableStateOf(false) }
+
+			val accent = colorResource(R.color.browse_mode_trending)
+			val borderColor = when {
+				focused -> Color.White
+				active -> accent
+				else -> Color.Black.copy(alpha = 0.12f)
+			}
+
+			Text(
+				text = label,
+				fontSize = 14.sp,
+				color = if (active) accent else LocalColorScheme.current.listCaption,
+				modifier = Modifier
+					.border(
+						width = if (focused || active) 2.dp else 1.dp,
+						color = borderColor,
+						shape = RoundedCornerShape(16.dp),
+					)
+					.onFocusChanged { focused = it.isFocused }
+					.clickable { onSelect(value) }
+					.padding(horizontal = 16.dp, vertical = 6.dp),
+			)
+		}
 	}
 }

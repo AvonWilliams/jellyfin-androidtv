@@ -75,6 +75,12 @@ class SystemPreferences(context: Context) : SharedPreferenceStore(
 		fun browseSourcePreference(modeKey: String) = stringPreference("browse_source_$modeKey", "")
 
 		/**
+		 * The trending window ("day", "week" or "month") last selected for a ranked browse mode,
+		 * keyed by the mode's stable key. Only Trending reads it; the default matches the server.
+		 */
+		fun browseWindowPreference(modeKey: String) = stringPreference("browse_window_$modeKey", "week")
+
+		/**
 		 * Whether ranked discover lists show external titles that are not in the library. Defaults
 		 * on; hiding them never changes the server default, only this client's rendering.
 		 */
