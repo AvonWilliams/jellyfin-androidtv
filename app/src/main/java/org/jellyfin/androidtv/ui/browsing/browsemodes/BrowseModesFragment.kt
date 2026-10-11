@@ -4,9 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,20 +15,15 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
@@ -38,7 +32,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.preference.PreferencesRepository
@@ -61,11 +54,11 @@ import timber.log.Timber
 /**
  * The grid of tiles shown when a library is opened, each tile a way of browsing that library.
  *
- * The library name and the "Browse by…" section label are full-width headings rendered outside the
- * tile columns: the library name sits above the primary actions (All, Trending, Top Rated, New
- * Releases, Just Added, Random), and "Browse by…" separates them from the meta section. Meta tiles
- * marked [BrowseModeDefinition.inline] (Time, People, Quality) render their children directly on
- * the home grid under a sub-heading; the remaining meta tiles open pickers or a secondary grid.
+ * The library's backdrop art fills the viewport behind the grid (see [LibraryBackdrop]). Headings
+ * are quiet left-aligned text labels, not glass bars: the library-name title and the "Browse by…"
+ * heading were removed entirely, matching the web. Meta tiles marked [BrowseModeDefinition.inline]
+ * (Categories, Mood & Themes, People, Discover) render their children directly on the home grid
+ * under a quiet label; the remaining meta tiles open pickers or a secondary grid.
  */
 private const val COLUMNS = 6
 
@@ -85,14 +78,12 @@ class BrowseModesFragment : Fragment() {
 	private lateinit var primary: List<BrowseModeTile>
 	private lateinit var inline: List<BrowseModeInline>
 	private lateinit var meta: List<BrowseModeTile>
-	private lateinit var browseByLabel: String
 	private val counts = mutableStateOf<Map<BrowseMode, Int>>(emptyMap())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
 		folder = Json.decodeFromString<BaseItemDto>(requireArguments().getString(Extras.Folder)!!)
-		browseByLabel = getString(R.string.lbl_browse_by)
 
 		val modes = getBrowseModes(folder.collectionType).orEmpty()
 		primary = modes.filter { it.tier == BrowseTier.PRIMARY }
@@ -117,15 +108,16 @@ class BrowseModesFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				BrowseModesGrid(
-					title = folder.name.orEmpty(),
-					browseByLabel = browseByLabel,
-					primary = primary,
-					inline = inline,
-					meta = meta,
-					counts = counts.value,
-					onTileClick = ::openTile,
-				)
+				Box(modifier = Modifier.fillMaxSize()) {
+					LibraryBackdrop(folder = folder)
+					BrowseModesGrid(
+						primary = primary,
+						inline = inline,
+						meta = meta,
+						counts = counts.value,
+						onTileClick = ::openTile,
+					)
+				}
 			}
 		}
 	}
@@ -207,8 +199,6 @@ class BrowseModesFragment : Fragment() {
 
 @Composable
 private fun BrowseModesGrid(
-	title: String,
-	browseByLabel: String,
 	primary: List<BrowseModeTile>,
 	inline: List<BrowseModeInline>,
 	meta: List<BrowseModeTile>,
@@ -230,10 +220,6 @@ private fun BrowseModesGrid(
 		horizontalArrangement = Arrangement.spacedBy(8.dp),
 		verticalArrangement = Arrangement.spacedBy(8.dp),
 	) {
-		item(key = "library-heading", span = { GridItemSpan(maxLineSpan) }) {
-			BrowseModeHeading(title, fontSize = 30.sp, variant = HeadingVariant.MAIN)
-		}
-
 		itemsIndexed(primary, key = { _, tile -> tile.definition.mode.key }) { index, tile ->
 			BrowseModeTileCard(
 				tile = tile,
@@ -242,13 +228,9 @@ private fun BrowseModesGrid(
 			)
 		}
 
-		item(key = "browse-by-heading", span = { GridItemSpan(maxLineSpan) }) {
-			BrowseModeHeading(browseByLabel, fontSize = 22.sp)
-		}
-
 		inline.forEach { section ->
 			item(key = "inline-heading-${section.label}", span = { GridItemSpan(maxLineSpan) }) {
-				BrowseModeHeading(section.label, fontSize = 18.sp, variant = HeadingVariant.SUBHEADING)
+				BrowseModeSectionLabel(section.label)
 			}
 
 			itemsIndexed(section.children, key = { _, tile -> tile.definition.mode.key }) { _, tile ->
@@ -269,31 +251,21 @@ private fun BrowseModesGrid(
 	}
 }
 
-/** Heading prominence levels, mirroring the web's main / section / sub-heading glass treatment. */
-private enum class HeadingVariant(val radius: Dp, val weight: FontWeight, val alpha: Float) {
-	MAIN(8.dp, FontWeight.Medium, 0.50f),
-	SECTION(7.dp, FontWeight.Normal, 0.35f),
-	SUBHEADING(6.dp, FontWeight.Normal, 0.35f),
-}
-
-/** A full-width, non-focusable section heading on a translucent glass bar, matching the web's heading bars. */
+/**
+ * Quiet left-aligned group label (Categories / Mood & Themes / People / Discover), matching the
+ * web's de-pilled group headings (`GROUP_LABEL_SX`: 0.875rem, weight 600, text-secondary, 0.03em
+ * letter-spacing, 4px left padding). No glass bar.
+ */
 @Composable
-private fun BrowseModeHeading(
-	text: String,
-	fontSize: TextUnit = 22.sp,
-	variant: HeadingVariant = HeadingVariant.SECTION,
-) {
+private fun BrowseModeSectionLabel(text: String) {
 	Text(
 		text = text,
-		fontSize = fontSize,
-		fontWeight = variant.weight,
-		color = Color.White,
-		textAlign = TextAlign.Center,
+		fontSize = 14.sp,
+		fontWeight = FontWeight.SemiBold,
+		color = Color.White.copy(alpha = 0.7f),
+		letterSpacing = 0.42.sp,
 		modifier = Modifier
 			.fillMaxWidth()
-			.clip(RoundedCornerShape(variant.radius))
-			.background(BrowseGlass.surface(variant.alpha))
-			.border(1.dp, BrowseGlass.border, RoundedCornerShape(variant.radius))
-			.padding(horizontal = 12.dp, vertical = 8.dp),
+			.padding(start = 4.dp),
 	)
 }
