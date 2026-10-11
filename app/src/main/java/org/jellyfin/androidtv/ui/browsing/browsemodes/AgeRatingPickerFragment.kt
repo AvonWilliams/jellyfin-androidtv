@@ -40,7 +40,7 @@ class AgeRatingPickerFragment : Fragment() {
 	private lateinit var itemType: BaseItemKind
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
-	private var sortMode = SortMode.RANDOM
+	private var sortMode = SortMode.A_Z
 	private var rawRatings: List<String> = emptyList()
 	private val ratingCounts = mutableStateOf<Map<String, Int>>(emptyMap())
 
@@ -67,7 +67,13 @@ class AgeRatingPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value, counts = ratingCounts.value) { item -> onClick(item) }
+				TextListGrid(
+					title.value,
+					items.value,
+					counts = ratingCounts.value,
+					sortMode = sortMode,
+					onSortChange = { sortMode = it; refreshGrid() },
+				) { item -> onClick(item) }
 			}
 		}
 	}
@@ -78,21 +84,10 @@ class AgeRatingPickerFragment : Fragment() {
 	}
 
 	private fun onClick(item: BaseItemDto) {
-		when (item.originalTitle) {
-			"__sort__" -> {
-				sortMode = sortMode.next()
-				refreshGrid()
-			}
-
-			"__reshuffle__" -> refreshGrid()
-
-			else -> {
-				val rating = item.originalTitle ?: item.name ?: return
-				navigationRepository.navigate(
-					Destinations.libraryByAgeRatingItems(folder, rating, itemType.serialName)
-				)
-			}
-		}
+		val rating = item.originalTitle ?: item.name ?: return
+		navigationRepository.navigate(
+			Destinations.libraryByAgeRatingItems(folder, rating, itemType.serialName)
+		)
 	}
 
 	private fun load() = lifecycleScope.launch {
@@ -111,46 +106,23 @@ class AgeRatingPickerFragment : Fragment() {
 	}
 
 	private fun refreshGrid() {
-		val list = mutableListOf<BaseItemDto>()
-
-		val sortJson = buildJsonObject {
-			put("Name", " Sort: ${sortMode.label}")
-			put("OriginalTitle", "__sort__")
-			put("Id", java.util.UUID.randomUUID().toString())
-			put("Type", "Folder")
-		}.toString()
-		list.add(Json.decodeFromString<BaseItemDto>(sortJson))
-
-		if (sortMode == SortMode.RANDOM) {
-			val shuffleJson = buildJsonObject {
-				put("Name", " ↻ Reshuffle")
-				put("OriginalTitle", "__reshuffle__")
-				put("Id", java.util.UUID.randomUUID().toString())
-				put("Type", "Folder")
-			}.toString()
-			list.add(Json.decodeFromString<BaseItemDto>(shuffleJson))
-		}
-
 		val counts = ratingCounts.value
 		val sorted = when (sortMode) {
-			SortMode.RANDOM -> interleavedShuffle(rawRatings, counts)
 			SortMode.A_Z -> rawRatings.sorted()
 			SortMode.Z_A -> rawRatings.sortedDescending()
 			SortMode.MOST -> rawRatings.sortedByDescending { counts[it] ?: 0 }
 			SortMode.FEWEST -> rawRatings.sortedBy { counts[it] ?: 0 }
 		}
 
-		sorted.forEach { rating ->
+		items.value = sorted.map { rating ->
 			val json = buildJsonObject {
 				put("Name", rating)
 				put("OriginalTitle", rating)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			list.add(Json.decodeFromString<BaseItemDto>(json))
+			Json.decodeFromString<BaseItemDto>(json)
 		}
-
-		items.value = list
 	}
 
 	private suspend fun fetchRatings(): List<String> {

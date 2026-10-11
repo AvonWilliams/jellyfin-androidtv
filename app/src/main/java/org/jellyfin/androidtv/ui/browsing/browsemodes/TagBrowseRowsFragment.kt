@@ -56,7 +56,7 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 	private lateinit var mode: BrowseMode
 	private lateinit var itemType: BaseItemKind
 	private lateinit var rowsAdapter: MutableObjectAdapter<Row>
-	private var sortMode = SortMode.RANDOM
+	private var sortMode = SortMode.A_Z
 	private var rawTags: List<String> = emptyList()
 	private var tagCounts: Map<String, Int> = emptyMap()
 
@@ -78,11 +78,9 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 		adapter = rowsAdapter
 
 		onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-			val baseItem = (item as? BaseItemDtoBaseRowItem)?.baseItem
-		if (baseItem?.originalTitle == "__sort__") {
-				sortMode = sortMode.next()
-				refreshRows()
-			} else if (baseItem?.originalTitle == "__reshuffle__") {
+			val originalTitle = (item as? BaseItemDtoBaseRowItem)?.baseItem?.originalTitle
+			if (originalTitle?.startsWith("__pill__") == true) {
+				sortMode = SortMode.valueOf(originalTitle.removePrefix("__pill__"))
 				refreshRows()
 			} else if (item is BaseRowItem) {
 				itemLauncher.launch(item, null, requireContext())
@@ -110,15 +108,7 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 	private fun refreshRows() {
 		rowsAdapter.clear()
 
-		// Sort toggle row
-		val sortJson = buildJsonObject {
-			put("Name", "Sort: ${sortMode.label}")
-			put("OriginalTitle", "__sort__")
-			put("Id", java.util.UUID.randomUUID().toString())
-			put("Type", "Folder")
-		}.toString()
-		val sortItem = BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(sortJson))
-		// Sort + optional reshuffle row
+		// Sort pills (A–Z / Z–A / Most / Fewest).
 		val sortRowAdapter = ArrayObjectAdapter(object : Presenter() {
 			override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
 				val tv = TextView(parent.context).apply {
@@ -136,20 +126,18 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			}
 			override fun onUnbindViewHolder(vh: Presenter.ViewHolder) {}
 		})
-		sortRowAdapter.add(sortItem)
-		if (sortMode == SortMode.RANDOM) {
-			val shuffleJson = buildJsonObject {
-				put("Name", " ↻ Reshuffle")
-				put("OriginalTitle", "__reshuffle__")
+		SortMode.PILLS.forEach { mode ->
+			val pillJson = buildJsonObject {
+				put("Name", mode.label)
+				put("OriginalTitle", "__pill__${mode.name}")
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			sortRowAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(shuffleJson)))
+			sortRowAdapter.add(BaseItemDtoBaseRowItem(Json.decodeFromString<BaseItemDto>(pillJson)))
 		}
 		rowsAdapter.add(ListRow(HeaderItem(""), sortRowAdapter))
 
 		val sorted = when (sortMode) {
-			SortMode.RANDOM -> interleavedShuffle(rawTags, tagCounts)
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()
 			SortMode.MOST -> rawTags.sortedByDescending { tagCounts[it] ?: 0 }

@@ -41,7 +41,7 @@ class TagPickerFragment : Fragment() {
 	private lateinit var itemType: BaseItemKind
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
-	private var sortMode = SortMode.RANDOM
+	private var sortMode = SortMode.A_Z
 	private var rawTags: List<String> = emptyList()
 	private val tagCounts = mutableStateOf<Map<String, Int>>(emptyMap())
 
@@ -67,7 +67,13 @@ class TagPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value, counts = tagCounts.value) { item -> onClick(item) }
+				TextListGrid(
+					title.value,
+					items.value,
+					counts = tagCounts.value,
+					sortMode = sortMode,
+					onSortChange = { sortMode = it; refreshGrid() },
+				) { item -> onClick(item) }
 			}
 		}
 	}
@@ -78,18 +84,6 @@ class TagPickerFragment : Fragment() {
 	}
 
 	private fun onClick(item: BaseItemDto) {
-		// Sort button
-		if (item.originalTitle == "__sort__") {
-			sortMode = sortMode.next()
-			refreshGrid()
-			return
-		}
-		// Reshuffle button
-		if (item.originalTitle == "__reshuffle__") {
-			refreshGrid()
-			return
-		}
-
 		// Tag row — use originalTitle (raw tag) for filtering
 		val tag = item.originalTitle ?: item.name ?: return
 		navigationRepository.navigate(
@@ -114,48 +108,23 @@ class TagPickerFragment : Fragment() {
 	}
 
 	private fun refreshGrid() {
-		val list = mutableListOf<BaseItemDto>()
-
-		// Sort toggle row
-		val sortJson = buildJsonObject {
-			put("Name", " Sort: ${sortMode.label}")
-			put("OriginalTitle", "__sort__")
-			put("Id", java.util.UUID.randomUUID().toString())
-			put("Type", "Folder")
-		}.toString()
-		list.add(Json.decodeFromString<BaseItemDto>(sortJson))
-
-		// Reshuffle button (only in Random mode)
-		if (sortMode == SortMode.RANDOM) {
-			val shuffleJson = buildJsonObject {
-				put("Name", " ↻ Reshuffle")
-				put("OriginalTitle", "__reshuffle__")
-				put("Id", java.util.UUID.randomUUID().toString())
-				put("Type", "Folder")
-			}.toString()
-			list.add(Json.decodeFromString<BaseItemDto>(shuffleJson))
-		}
-
 		val counts = tagCounts.value
 		val sorted = when (sortMode) {
-			SortMode.RANDOM -> interleavedShuffle(rawTags, counts)
 			SortMode.A_Z -> rawTags.sorted()
 			SortMode.Z_A -> rawTags.sortedDescending()
 			SortMode.MOST -> rawTags.sortedByDescending { counts[it] ?: 0 }
 			SortMode.FEWEST -> rawTags.sortedBy { counts[it] ?: 0 }
 		}
 
-		sorted.forEach { tagName ->
+		items.value = sorted.map { tagName ->
 			val json = buildJsonObject {
 				put("Name", tagName.toTitleCase())
 				put("OriginalTitle", tagName)
 				put("Id", java.util.UUID.randomUUID().toString())
 				put("Type", "Folder")
 			}.toString()
-			list.add(Json.decodeFromString<BaseItemDto>(json))
+			Json.decodeFromString<BaseItemDto>(json)
 		}
-
-		items.value = list
 	}
 
 	private suspend fun fetchMatchingTags(): List<String> {
@@ -188,18 +157,14 @@ class TagPickerFragment : Fragment() {
 }
 
 enum class SortMode(val label: String) {
-	RANDOM("Random"),
 	A_Z("A–Z"),
 	Z_A("Z–A"),
 	MOST("Most items"),
 	FEWEST("Fewest items");
 
-	fun next(): SortMode = when (this) {
-		RANDOM -> A_Z
-		A_Z -> Z_A
-		Z_A -> MOST
-		MOST -> FEWEST
-		FEWEST -> RANDOM
+	companion object {
+		/** The sort pills offered on every picker, in display order. */
+		val PILLS = listOf(A_Z, Z_A, MOST, FEWEST)
 	}
 }
 
@@ -225,31 +190,4 @@ internal fun String.toTitleCase(): String = buildString {
 			append(char)
 		}
 	}
-}
-
-/**
- * Produces a shuffled list where high-count and low-count items are interleaved,
- * avoiding screens full of empty or near-empty categories.
- *
- * When counts aren't loaded yet, falls back to a plain shuffle.
- */
-internal fun interleavedShuffle(items: List<String>, counts: Map<String, Int>): List<String> {
-	if (counts.isEmpty() || items.size < 3) return items.shuffled()
-
-	// Sort by count descending then split into three buckets.
-	val sorted = items.sortedByDescending { counts[it] ?: 0 }
-	val third = (sorted.size + 2) / 3
-	val high = sorted.take(third).shuffled()
-	val mid = sorted.drop(third).take(third).shuffled()
-	val low = sorted.drop(third * 2).shuffled()
-
-	// Interleave: pick one from high, mid, low in rotation.
-	val result = mutableListOf<String>()
-	val iters = listOf(high.iterator(), mid.iterator(), low.iterator())
-	var i = 0
-	while (result.size < items.size) {
-		if (iters[i % 3].hasNext()) result.add(iters[i % 3].next())
-		i++
-	}
-	return result
 }
