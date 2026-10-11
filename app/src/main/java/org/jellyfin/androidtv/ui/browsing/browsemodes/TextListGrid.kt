@@ -166,7 +166,16 @@ private fun TextRow(
 			.then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
 			.onFocusChanged { focused = it.isFocused }
 			.clickable(onClick = onClick)
-			.background(if (focused) Color(0x33FFFFFF) else Color.Transparent),
+			.then(
+				if (iconTile) {
+					Modifier
+						.clip(RoundedCornerShape(8.dp))
+						.background(BrowseGlass.surface(0.7f))
+						.border(1.dp, if (focused) Color.White else BrowseGlass.border, RoundedCornerShape(8.dp))
+				} else {
+					Modifier.background(if (focused) Color(0x33FFFFFF) else Color.Transparent)
+				}
+			),
 		contentAlignment = Alignment.Center,
 	) {
 		if (iconTile) {
