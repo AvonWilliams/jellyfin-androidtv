@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -112,26 +113,29 @@ class DiscoverFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				Column(modifier = Modifier.fillMaxSize()) {
-					BrowseSourceBar(
-						sources = getEnabledSources(mode, folder.collectionType == CollectionType.TVSHOWS),
-						activeSource = activeSource.value,
-						onSelect = ::selectSource,
-						focusRequester = sourceBarFocusRequester,
-					)
-					ShowMissingToggle(
-						checked = showMissing.value,
-						onToggle = ::toggleShowMissing,
-					)
-					PosterGrid(
-						title = title.value,
-						sortDescription = "Sort by: Rank",
-						items = items.value,
-						showRankBadge = true,
-						emptyMessage = if (loaded.value) emptyMessage else null,
-						missing = if (showMissing.value) missing.value else emptyList(),
-						onItemClick = ::launch,
-					)
+				Box(modifier = Modifier.fillMaxSize()) {
+					LibraryBackdrop(folder = folder)
+					Column(modifier = Modifier.fillMaxSize()) {
+						BrowseSourceBar(
+							sources = getEnabledSources(mode, folder.collectionType == CollectionType.TVSHOWS),
+							activeSource = activeSource.value,
+							onSelect = ::selectSource,
+							focusRequester = sourceBarFocusRequester,
+						)
+						ShowMissingToggle(
+							checked = showMissing.value,
+							onToggle = ::toggleShowMissing,
+						)
+						PosterGrid(
+							title = title.value,
+							sortDescription = "Sort by: Rank",
+							items = items.value,
+							showRankBadge = true,
+							emptyMessage = if (loaded.value) emptyMessage else null,
+							missing = if (showMissing.value) missing.value else emptyList(),
+							onItemClick = ::launch,
+						)
+					}
 				}
 
 				LaunchedEffect(items.value.isEmpty(), missing.value.isEmpty(), showMissing.value, loaded.value) {
