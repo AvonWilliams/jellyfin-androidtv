@@ -58,6 +58,7 @@ internal fun TextListGrid(
 	counts: Map<String, Int> = emptyMap(),
 	iconFor: ((BaseItemDto) -> Int?)? = null,
 	iconTint: Color = Color.Unspecified,
+	iconTintFor: ((BaseItemDto) -> Color)? = null,
 	sortMode: SortMode? = null,
 	onSortChange: ((SortMode) -> Unit)? = null,
 	labelFontSize: TextUnit = 16.sp,
@@ -95,7 +96,7 @@ internal fun TextListGrid(
 				TextRow(
 					label,
 					icon = iconFor?.invoke(item),
-					iconTint = iconTint,
+					iconTint = iconTintFor?.invoke(item) ?: iconTint,
 					focusRequester = if (index == 0) firstItemFocusRequester else null,
 					labelFontSize = labelFontSize,
 					labelFontWeight = labelFontWeight,

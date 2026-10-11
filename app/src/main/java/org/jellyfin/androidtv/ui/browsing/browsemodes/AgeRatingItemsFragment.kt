@@ -29,8 +29,8 @@ import org.koin.android.ext.android.inject
 import timber.log.Timber
 
 /**
- * The items matching a single official content rating (e.g. "PG-13", "TV-MA"),
- * shown as a Compose poster grid.
+ * The items matching one or more official content ratings (a single code, or every code of a
+ * rating level), shown as a Compose poster grid.
  *
  * Rating selection from [AgeRatingPickerFragment] navigates here.
  */
@@ -43,7 +43,7 @@ class AgeRatingItemsFragment : Fragment() {
 	private val itemLauncher by inject<ItemLauncher>()
 
 	private lateinit var folder: BaseItemDto
-	private lateinit var rating: String
+	private lateinit var ratings: Set<String>
 	private lateinit var itemType: BaseItemKind
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
@@ -52,11 +52,13 @@ class AgeRatingItemsFragment : Fragment() {
 		super.onCreate(savedInstanceState)
 
 		folder = Json.decodeFromString<BaseItemDto>(requireArguments().getString(Extras.Folder)!!)
-		rating = requireArguments().getString(Extras.Tag)!!
+		ratings = requireArguments().getStringArrayList(Extras.Tag)?.toSet()
+			?: requireArguments().getString(Extras.Tag)?.let { setOf(it) }
+			?: emptySet()
 		itemType = BaseItemKind.fromNameOrNull(requireArguments().getString(Extras.IncludeType)!!)
 			?: BaseItemKind.MOVIE
 
-		title.value = "${folder.name} - $rating"
+		title.value = "${folder.name} - ${ratingLabel()}"
 	}
 
 	override fun onCreateView(
@@ -80,6 +82,9 @@ class AgeRatingItemsFragment : Fragment() {
 		itemLauncher.launch(BaseItemDtoBaseRowItem(item), MutableObjectAdapter<Any>(), requireContext())
 	}
 
+	private fun ratingLabel(): String =
+		ratings.firstOrNull()?.let { RATING_LEVEL_LABEL[getRatingLevel(it)] } ?: ratings.joinToString(", ")
+
 	private fun load() = lifecycleScope.launch {
 		val result = try {
 			withContext(Dispatchers.IO) {
@@ -87,7 +92,7 @@ class AgeRatingItemsFragment : Fragment() {
 					GetItemsRequest(
 						parentId = folder.id,
 						includeItemTypes = setOf(itemType),
-						officialRatings = setOf(rating),
+						officialRatings = ratings,
 						sortBy = setOf(ItemSortBy.RANDOM),
 						sortOrder = setOf(SortOrder.ASCENDING),
 						recursive = true,
@@ -97,7 +102,7 @@ class AgeRatingItemsFragment : Fragment() {
 				).content.items
 			}
 		} catch (error: Exception) {
-			Timber.e(error, "Unable to load age rating items for %s / %s", folder.name, rating)
+			Timber.e(error, "Unable to load age rating items for %s / %s", folder.name, ratings)
 			emptyList()
 		}
 

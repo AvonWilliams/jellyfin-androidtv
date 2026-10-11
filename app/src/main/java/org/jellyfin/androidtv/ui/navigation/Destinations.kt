@@ -182,10 +182,10 @@ object Destinations {
 	}
 
 	// TODO only pass item id instead of complete JSON to browsing destinations
-	fun libraryByAgeRatingItems(item: BaseItemDto, rating: String, includeType: String) =
+	fun libraryByAgeRatingItems(item: BaseItemDto, ratings: Set<String>, includeType: String) =
 		fragmentDestination<AgeRatingItemsFragment> {
 			putString(Extras.Folder, Json.encodeToString(item))
-			putString(Extras.Tag, rating)
+			putStringArrayList(Extras.Tag, ArrayList(ratings))
 			putString(Extras.IncludeType, includeType)
 		}
 
