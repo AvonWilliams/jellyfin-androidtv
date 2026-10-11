@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,15 +33,30 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.jellyfin.androidtv.R
+import org.jellyfin.androidtv.auth.repository.UserRepository
 import org.jellyfin.androidtv.constant.Extras
 import org.jellyfin.androidtv.preference.PreferencesRepository
 import org.jellyfin.androidtv.ui.base.JellyfinTheme
 import org.jellyfin.androidtv.ui.base.Text
 import org.jellyfin.androidtv.ui.navigation.NavigationRepository
+import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.api.client.extensions.genresApi
+import org.jellyfin.sdk.api.client.extensions.get
+import org.jellyfin.sdk.api.client.extensions.studiosApi
 import org.jellyfin.sdk.model.api.BaseItemDto
+import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.CollectionType
+import org.jellyfin.sdk.model.api.ItemSortBy
+import org.jellyfin.sdk.model.api.QueryFiltersLegacy
+import org.jellyfin.sdk.model.api.request.GetStudiosRequest
 import org.koin.android.ext.android.inject
+import timber.log.Timber
 
 /**
  * The grid of tiles shown when a library is opened, each tile a way of browsing that library.
@@ -60,14 +76,17 @@ private data class BrowseModeInline(
 )
 
 class BrowseModesFragment : Fragment() {
+	private val apiClient by inject<ApiClient>()
 	private val navigationRepository by inject<NavigationRepository>()
 	private val preferencesRepository by inject<PreferencesRepository>()
+	private val userRepository by inject<UserRepository>()
 
 	private lateinit var folder: BaseItemDto
 	private lateinit var primary: List<BrowseModeTile>
 	private lateinit var inline: List<BrowseModeInline>
 	private lateinit var meta: List<BrowseModeTile>
 	private lateinit var browseByLabel: String
+	private val counts = mutableStateOf<Map<BrowseMode, Int>>(emptyMap())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -104,6 +123,7 @@ class BrowseModesFragment : Fragment() {
 					primary = primary,
 					inline = inline,
 					meta = meta,
+					counts = counts.value,
 					onTileClick = ::openTile,
 				)
 			}
@@ -112,6 +132,77 @@ class BrowseModesFragment : Fragment() {
 
 	private fun openTile(definition: BrowseModeDefinition) =
 		openBrowseMode(folder, definition, navigationRepository, preferencesRepository)
+
+	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+		super.onViewCreated(view, savedInstanceState)
+		lifecycleScope.launch {
+			val result = try {
+				withContext(Dispatchers.IO) { fetchChildCounts() }
+			} catch (error: Exception) {
+				Timber.e(error, "Unable to load browse-mode counts for %s", folder.name)
+				emptyMap()
+			}
+
+			if (isAdded) counts.value = result
+		}
+	}
+
+	/**
+	 * Number of distinct entries under each meta child (genres, studios, decades, years, ratings,
+	 * curated tags, people), mirroring the web's child-tile counts.
+	 */
+	private suspend fun fetchChildCounts(): Map<BrowseMode, Int> {
+		val itemType = when (folder.collectionType) {
+			CollectionType.TVSHOWS -> BaseItemKind.SERIES
+			else -> BaseItemKind.MOVIE
+		}
+		val userId = userRepository.currentUser.value?.id ?: return emptyMap()
+
+		val result = mutableMapOf<BrowseMode, Int>()
+
+		// Years, ratings and tags come from the library's filter metadata in one call.
+		val filters = try {
+			apiClient.get<QueryFiltersLegacy>(
+				pathTemplate = "/Items/Filters",
+				queryParameters = mapOf(
+					"userId" to userId,
+					"parentId" to folder.id,
+					"includeItemTypes" to itemType.serialName,
+				),
+			).content
+		} catch (error: Exception) {
+			Timber.e(error, "Unable to load filters for %s", folder.name)
+			null
+		}
+
+		val years = filters?.years.orEmpty()
+		result[BrowseMode.DECADES] = years.map { (it / 10) * 10 }.distinct().size
+		result[BrowseMode.YEAR] = years.distinct().size
+		result[BrowseMode.AGE_RATING] = filters?.officialRatings.orEmpty().size
+
+		// Curated tags that are actually present in this library.
+		val libraryTags = filters?.tags.orEmpty().map { it.lowercase() }.toSet()
+		for (mode in listOf(BrowseMode.MOOD, BrowseMode.STORY_THEMES, BrowseMode.PLOT_ELEMENTS, BrowseMode.WORLDS, BrowseMode.STYLES)) {
+			result[mode] = curatedTagsFor(mode).count { libraryTags.contains(it.lowercase()) }
+		}
+
+		// Distinct genres and studios.
+		result[BrowseMode.GENRES] = try {
+			apiClient.genresApi.getGenres(parentId = folder.id, sortBy = setOf(ItemSortBy.SORT_NAME)).content.items.orEmpty().size
+		} catch (error: Exception) { 0 }
+
+		result[BrowseMode.STUDIOS] = try {
+			apiClient.studiosApi.getStudios(GetStudiosRequest(parentId = folder.id)).content.items.orEmpty().size
+		} catch (error: Exception) { 0 }
+
+		// Distinct people per kind.
+		val personCounts = fetchItemCounts(apiClient, countCacheKey(folder.id, "person"), "person", folder.id, itemType)
+		result[BrowseMode.ACTORS] = personCounts["Actor"] ?: 0
+		result[BrowseMode.DIRECTORS] = personCounts["Director"] ?: 0
+		result[BrowseMode.WRITERS] = personCounts["Writer"] ?: 0
+
+		return result
+	}
 }
 
 @Composable
@@ -121,6 +212,7 @@ private fun BrowseModesGrid(
 	primary: List<BrowseModeTile>,
 	inline: List<BrowseModeInline>,
 	meta: List<BrowseModeTile>,
+	counts: Map<BrowseMode, Int>,
 	onTileClick: (BrowseModeDefinition) -> Unit,
 ) {
 	val gridState = rememberLazyGridState()
@@ -163,6 +255,7 @@ private fun BrowseModesGrid(
 				BrowseModeTileCard(
 					tile = tile,
 					onClick = { onTileClick(tile.definition) },
+					count = counts[tile.definition.mode],
 				)
 			}
 		}

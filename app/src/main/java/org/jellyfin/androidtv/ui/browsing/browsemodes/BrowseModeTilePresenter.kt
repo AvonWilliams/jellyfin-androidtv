@@ -87,6 +87,7 @@ private class ComposeViewWrapper(
 internal fun BrowseModeTileContent(
 	tile: BrowseModeTile,
 	modifier: Modifier = Modifier,
+	count: Int? = null,
 ) {
 	val iconSize = if (tile.small) META_ICON_SIZE else ICON_SIZE
 	val labelSize = if (tile.small) META_LABEL_SIZE else LABEL_SIZE
@@ -125,6 +126,15 @@ internal fun BrowseModeTileContent(
 				fontSize = labelSize.sp,
 				textAlign = TextAlign.Center,
 			)
+
+			if (count != null) {
+				Text(
+					text = count.toString(),
+					color = Color.White.copy(alpha = 0.6f),
+					fontSize = 12.sp,
+					textAlign = TextAlign.Center,
+				)
+			}
 		}
 	}
 }
@@ -136,6 +146,7 @@ internal fun BrowseModeTileCard(
 	onClick: () -> Unit,
 	modifier: Modifier = Modifier,
 	focusRequester: FocusRequester? = null,
+	count: Int? = null,
 ) {
 	var focused by remember { mutableStateOf(false) }
 
@@ -150,6 +161,7 @@ internal fun BrowseModeTileCard(
 		BrowseModeTileContent(
 			tile = tile,
 			modifier = if (focused) Modifier.border(3.dp, Color.White, RoundedCornerShape(tileRadius(tile.small))) else Modifier,
+			count = count,
 		)
 	}
 }
@@ -188,4 +200,6 @@ data class BrowseModeTile(
 	val label: String,
 	/** Renders at the smaller meta-tile size. */
 	val small: Boolean = false,
+	/** Number of distinct entries under this tile, shown beneath the label. */
+	val count: Int? = null,
 )
