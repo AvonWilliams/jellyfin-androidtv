@@ -170,7 +170,7 @@ class BrowseModesFragment : Fragment() {
 		val years = filters?.years.orEmpty()
 		result[BrowseMode.DECADES] = years.map { (it / 10) * 10 }.distinct().size
 		result[BrowseMode.YEAR] = years.distinct().size
-		result[BrowseMode.AGE_RATING] = filters?.officialRatings.orEmpty().size
+		result[BrowseMode.AGE_RATING] = filters?.officialRatings.orEmpty().map { getRatingLevel(it) }.toSet().size
 
 		// Curated tags that are actually present in this library.
 		val libraryTags = filters?.tags.orEmpty().map { it.lowercase() }.toSet()
