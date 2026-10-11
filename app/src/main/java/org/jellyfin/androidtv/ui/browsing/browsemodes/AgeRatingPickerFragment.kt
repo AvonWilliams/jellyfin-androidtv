@@ -88,6 +88,7 @@ class AgeRatingPickerFragment : Fragment() {
 						iconTintFor = { ratingColorFor(it.originalTitle) },
 						sortMode = sortMode,
 						onSortChange = { sortMode = it; refreshGrid() },
+						iconTile = true,
 					) { item -> onClick(item) }
 				}
 			}

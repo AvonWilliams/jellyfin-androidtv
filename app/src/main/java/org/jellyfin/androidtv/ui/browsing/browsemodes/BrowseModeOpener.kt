@@ -39,16 +39,9 @@ fun LifecycleOwner.openBrowseMode(
 		definition.destination == BrowseModeDestination.DISCOVER ->
 			navigationRepository.navigate(Destinations.discover(folder, definition.mode.key))
 
-		definition.destination == BrowseModeDestination.TAG_PICKER -> lifecycleScope.launch {
-			val prefs = preferencesRepository.getLibraryPreferences(
-				folder.displayPreferencesId ?: folder.id.toString()
-			)
-			if (prefs[LibraryPreferences.enableTagRibbonShelves]) {
-				navigationRepository.navigate(Destinations.tagBrowseRows(folder, definition.mode.key))
-			} else {
-				navigationRepository.navigate(Destinations.tagPicker(folder, definition.mode.key))
-			}
-		}
+		definition.destination == BrowseModeDestination.TAG_PICKER ->
+			// The ribbon shelves are disabled for now; a tiles <-> ribbon switch will be re-added later.
+			navigationRepository.navigate(Destinations.tagPicker(folder, definition.mode.key))
 
 		definition.destination == BrowseModeDestination.DECADES_PICKER ->
 			navigationRepository.navigate(Destinations.decadesPicker(folder))

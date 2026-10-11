@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.colorResource
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -67,14 +69,20 @@ class DecadesPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
+				val decadeDefinition = getBrowseModeDefinition(folder.collectionType, BrowseMode.DECADES)
+				val decadesIcon = decadeDefinition?.icon
+				val decadesColor = decadeDefinition?.iconTint?.let { colorResource(it) } ?: Color.Unspecified
 				Box(modifier = Modifier.fillMaxSize()) {
 					LibraryBackdrop(folder = folder)
 					TextListGrid(
 						title.value,
 						items.value,
 						counts = decadeCounts.value,
+						iconFor = { _ -> decadesIcon },
+						iconTint = decadesColor,
 						sortMode = sortMode,
 						onSortChange = { sortMode = it; rebuildItems() },
+						iconTile = true,
 					) { item -> onClick(item) }
 				}
 			}

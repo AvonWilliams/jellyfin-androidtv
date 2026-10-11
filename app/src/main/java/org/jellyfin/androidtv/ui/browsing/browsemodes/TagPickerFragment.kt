@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.colorResource
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -70,14 +72,20 @@ class TagPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
+				val modeDefinition = getBrowseModeDefinition(folder.collectionType, mode)
+				val tagIcon = modeDefinition?.icon
+				val tagColor = modeDefinition?.iconTint?.let { colorResource(it) } ?: Color.Unspecified
 				Box(modifier = Modifier.fillMaxSize()) {
 					LibraryBackdrop(folder = folder)
 					TextListGrid(
 						title.value,
 						items.value,
 						counts = tagCounts.value,
+						iconFor = { _ -> tagIcon },
+						iconTint = tagColor,
 						sortMode = sortMode,
 						onSortChange = { sortMode = it; refreshGrid() },
+						iconTile = true,
 					) { item -> onClick(item) }
 				}
 			}

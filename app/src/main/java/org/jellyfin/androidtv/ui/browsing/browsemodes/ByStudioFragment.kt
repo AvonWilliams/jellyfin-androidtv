@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.colorResource
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -71,14 +73,20 @@ class ByStudioFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
+				val studioDefinition = getBrowseModeDefinition(folder.collectionType, BrowseMode.STUDIOS)
+				val studiosIcon = studioDefinition?.icon
+				val studiosColor = studioDefinition?.iconTint?.let { colorResource(it) } ?: Color.Unspecified
 				Box(modifier = Modifier.fillMaxSize()) {
 					LibraryBackdrop(folder = folder)
 					TextListGrid(
 						title.value,
 						items.value,
 						counts = studioCounts.value,
+						iconFor = { _ -> studiosIcon },
+						iconTint = studiosColor,
 						sortMode = sortMode,
 						onSortChange = { sortMode = it; rebuildItems() },
+						iconTile = true,
 					) { item -> onClick(item) }
 				}
 			}

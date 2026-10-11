@@ -78,6 +78,7 @@ class YearsPickerFragment : Fragment() {
 						onSortChange = { sortMode = it; rebuildItems() },
 						labelFontSize = 32.sp,
 						labelFontWeight = FontWeight.Bold,
+						iconTile = true,
 					) { item -> onClick(item) }
 				}
 			}
