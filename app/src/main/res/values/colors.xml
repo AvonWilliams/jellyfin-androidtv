@@ -84,7 +84,8 @@
     <color name="browse_mode_plot_elements">#26A69A</color>
     <color name="browse_mode_worlds">#5C6BC0</color>
     <color name="browse_mode_styles">#7E57C2</color>
-    <color name="browse_mode_decades">#7E9CD8</color>
+    <color name="browse_mode_decades">#4FB3A0</color>
+    <color name="browse_mode_year">#E8A33D</color>
     <color name="browse_mode_age_rating">#9CCC65</color>
     <color name="browse_mode_people">#9CCC65</color>
     <color name="browse_mode_directors">#4DD0C4</color>

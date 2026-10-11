@@ -323,8 +323,8 @@ private val decadesMode = BrowseModeDefinition(
 private val yearMode = BrowseModeDefinition(
 	mode = BrowseMode.YEAR,
 	label = R.string.lbl_browse_mode_year,
-	icon = R.drawable.ic_calendar,
-	iconTint = R.color.browse_mode_decades,
+	icon = R.drawable.ic_year,
+	iconTint = R.color.browse_mode_year,
 	destination = BrowseModeDestination.YEARS_PICKER,
 )
 

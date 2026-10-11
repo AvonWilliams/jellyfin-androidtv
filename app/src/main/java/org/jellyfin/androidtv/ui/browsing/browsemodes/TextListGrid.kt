@@ -34,7 +34,9 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.jellyfin.androidtv.ui.base.Text
@@ -58,6 +60,8 @@ internal fun TextListGrid(
 	iconTint: Color = Color.Unspecified,
 	sortMode: SortMode? = null,
 	onSortChange: ((SortMode) -> Unit)? = null,
+	labelFontSize: TextUnit = 16.sp,
+	labelFontWeight: FontWeight? = null,
 	onItemClick: (BaseItemDto) -> Unit,
 ) {
 	val gridState = rememberLazyGridState()
@@ -93,6 +97,8 @@ internal fun TextListGrid(
 					icon = iconFor?.invoke(item),
 					iconTint = iconTint,
 					focusRequester = if (index == 0) firstItemFocusRequester else null,
+					labelFontSize = labelFontSize,
+					labelFontWeight = labelFontWeight,
 					onClick = { onItemClick(item) },
 				)
 			}
@@ -142,6 +148,8 @@ private fun TextRow(
 	icon: Int?,
 	iconTint: Color,
 	focusRequester: FocusRequester?,
+	labelFontSize: TextUnit,
+	labelFontWeight: FontWeight?,
 	onClick: () -> Unit,
 ) {
 	var focused by remember { mutableStateOf(false) }
@@ -172,7 +180,8 @@ private fun TextRow(
 
 			Text(
 				text = label,
-				fontSize = 16.sp,
+				fontSize = labelFontSize,
+				fontWeight = labelFontWeight,
 				color = Color.White,
 				textAlign = TextAlign.Center,
 			)

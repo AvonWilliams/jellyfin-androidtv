@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +41,8 @@ class YearsPickerFragment : Fragment() {
 	private lateinit var itemType: BaseItemKind
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
+	private var yearList: List<Int> = emptyList()
+	private val yearCounts = mutableStateOf<Map<String, Int>>(emptyMap())
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -60,7 +64,13 @@ class YearsPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value) { item -> onClick(item) }
+				TextListGrid(
+					title.value,
+					items.value,
+					counts = yearCounts.value,
+					labelFontSize = 32.sp,
+					labelFontWeight = FontWeight.Bold,
+				) { item -> onClick(item) }
 			}
 		}
 	}
@@ -88,7 +98,13 @@ class YearsPickerFragment : Fragment() {
 
 		if (!isAdded) return@launch
 
-		items.value = years.map { year ->
+		yearList = years
+		rebuildItems()
+		launch { withContext(Dispatchers.IO) { fetchYearCounts() } }
+	}
+
+	private fun rebuildItems() {
+		items.value = yearList.map { year ->
 			val label = year.toString()
 			val json = buildJsonObject {
 				put("Name", label)
@@ -98,6 +114,16 @@ class YearsPickerFragment : Fragment() {
 			}.toString()
 			Json.decodeFromString<BaseItemDto>(json)
 		}
+	}
+
+	private suspend fun fetchYearCounts() {
+		yearCounts.value = fetchItemCounts(
+			api = apiClient,
+			cacheKey = countCacheKey(folder.id, "year"),
+			type = "year",
+			parentId = folder.id,
+			itemType = itemType,
+		)
 	}
 
 	private suspend fun fetchYears(): List<Int> {
