@@ -54,8 +54,7 @@ class GenrePickerFragment : Fragment() {
 			else -> BaseItemKind.MOVIE
 		}
 
-		title.value = getBrowseModes(folder.collectionType)
-			?.firstOrNull { it.mode == BrowseMode.GENRES }
+		title.value = getBrowseModeDefinition(folder.collectionType, BrowseMode.GENRES)
 			?.label
 			?.let { getString(it) }
 			?: "Genres"

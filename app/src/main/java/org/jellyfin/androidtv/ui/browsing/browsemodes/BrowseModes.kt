@@ -47,6 +47,8 @@ enum class BrowseMode(val key: String) {
 	ACTORS("actors"),
 	DIRECTORS("directors"),
 	WRITERS("writers"),
+	BY_CATEGORIES("bycategories"),
+	BY_VIBE("byvibe"),
 }
 
 /** Which section of the browse-modes home a tile belongs to. */
@@ -287,29 +289,29 @@ private val watchAgainSeriesMode = watchAgainMovieMode.copy(
 	preset = BrowsePreset(ItemSortBy.SERIES_DATE_PLAYED, SortOrder.DESCENDING),
 )
 
-// The "Browse by…" meta tiles. Each opens an existing flow: either a single picker/shelf directly,
-// or a secondary grid of the modes listed in [children].
-private val storyMode = BrowseModeDefinition(
-	mode = BrowseMode.STORY,
-	label = R.string.lbl_browse_mode_story,
-	icon = R.drawable.ic_book,
-	iconTint = R.color.browse_mode_story_themes,
-	destination = BrowseModeDestination.META_PICKER,
+// The four "Browse by…" meta groups. Each renders its children inline on the home grid. Children
+// that differ per collection type (Studios/Networks, Critics' Picks, Watch Again) are attached when
+// the per-type list is built.
+private val byCategoriesMode = BrowseModeDefinition(
+	mode = BrowseMode.BY_CATEGORIES,
+	label = R.string.lbl_browse_by_categories,
+	icon = R.drawable.ic_masks,
+	iconTint = R.color.browse_mode_genres,
 	tier = BrowseTier.META,
-	children = listOf(storyThemesMode, plotElementsMode),
+	inline = true,
 )
 
-private val worldStyleMode = BrowseModeDefinition(
-	mode = BrowseMode.WORLD_STYLE,
-	label = R.string.lbl_browse_mode_world_style,
-	icon = R.drawable.ic_world,
-	iconTint = R.color.browse_mode_worlds,
-	destination = BrowseModeDestination.META_PICKER,
+private val byVibeMode = BrowseModeDefinition(
+	mode = BrowseMode.BY_VIBE,
+	label = R.string.lbl_browse_by_vibe,
+	icon = R.drawable.ic_palette,
+	iconTint = R.color.browse_mode_styles,
 	tier = BrowseTier.META,
-	children = listOf(worldsMode, stylesMode),
+	inline = true,
+	children = listOf(moodToneMode, storyThemesMode, plotElementsMode, worldsMode, stylesMode),
 )
 
-// The leaves of the inline Time meta tile: a decades picker and a single-year picker.
+// The leaves of the Categories group: a decades picker and a single-year picker.
 private val decadesMode = BrowseModeDefinition(
 	mode = BrowseMode.DECADES,
 	label = R.string.lbl_browse_mode_decades,
@@ -326,17 +328,7 @@ private val yearMode = BrowseModeDefinition(
 	destination = BrowseModeDestination.YEARS_PICKER,
 )
 
-private val timeMode = BrowseModeDefinition(
-	mode = BrowseMode.TIME,
-	label = R.string.lbl_browse_mode_time,
-	icon = R.drawable.ic_calendar,
-	iconTint = R.color.browse_mode_decades,
-	tier = BrowseTier.META,
-	inline = true,
-	children = listOf(decadesMode, yearMode),
-)
-
-// The leaves of the inline People meta tile, each listing the library's persons of one kind.
+// The People group's leaves, each listing the library's persons of one kind.
 private val actorsMode = BrowseModeDefinition(
 	mode = BrowseMode.ACTORS,
 	label = R.string.lbl_browse_mode_actors,
@@ -364,7 +356,7 @@ private val writersMode = BrowseModeDefinition(
 	personType = PersonKind.WRITER.serialName,
 )
 
-private val peopleMode = BrowseModeDefinition(
+private val byPeopleMode = BrowseModeDefinition(
 	mode = BrowseMode.PEOPLE,
 	label = R.string.lbl_browse_mode_people,
 	icon = R.drawable.ic_users,
@@ -376,9 +368,9 @@ private val peopleMode = BrowseModeDefinition(
 
 // Children differ per collection type (critics' picks and the watch-again preset), so they are
 // attached when the per-type list is built.
-private val qualityMode = BrowseModeDefinition(
+private val byQualityMode = BrowseModeDefinition(
 	mode = BrowseMode.QUALITY,
-	label = R.string.lbl_browse_mode_quality,
+	label = R.string.lbl_browse_by_quality,
 	icon = R.drawable.ic_star,
 	iconTint = R.color.browse_mode_hidden_gems,
 	tier = BrowseTier.META,
@@ -392,14 +384,10 @@ private val movieBrowseModes = listOf(
 	newReleasesMode,
 	justAddedMode,
 	randomMode,
-	genresMode,
-	moodToneMode,
-	storyMode,
-	worldStyleMode,
-	peopleMode,
-	timeMode,
-	qualityMode.copy(children = listOf(criticsPicksMode, hiddenGemsMode, ageRatingMode, watchAgainMovieMode)),
-	studiosMode,
+	byCategoriesMode.copy(children = listOf(genresMode, studiosMode, decadesMode, yearMode, ageRatingMode)),
+	byVibeMode,
+	byPeopleMode,
+	byQualityMode.copy(children = listOf(criticsPicksMode, hiddenGemsMode, watchAgainMovieMode)),
 )
 
 // Critics' picks is left out because almost no series carry a critic rating.
@@ -410,14 +398,10 @@ private val seriesBrowseModes = listOf(
 	newReleasesMode,
 	justAddedMode,
 	randomMode,
-	genresMode,
-	moodToneMode,
-	storyMode,
-	worldStyleMode,
-	peopleMode,
-	timeMode,
-	qualityMode.copy(children = listOf(hiddenGemsMode, ageRatingMode, watchAgainSeriesMode)),
-	networksMode,
+	byCategoriesMode.copy(children = listOf(genresMode, networksMode, decadesMode, yearMode, ageRatingMode)),
+	byVibeMode,
+	byPeopleMode,
+	byQualityMode.copy(children = listOf(hiddenGemsMode, watchAgainSeriesMode)),
 )
 
 /**

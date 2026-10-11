@@ -715,6 +715,9 @@
     <string name="lbl_browse_mode_writers">Writers</string>
     <string name="lbl_browse_mode_year">Year</string>
     <string name="lbl_browse_mode_age_rating">Age Rating</string>
+    <string name="lbl_browse_by_categories">Categories</string>
+    <string name="lbl_browse_by_vibe">Mood &amp; Themes</string>
+    <string name="lbl_browse_by_quality">Discover</string>
     <string name="lbl_studios">Studios</string>
     <string name="lbl_networks">Networks</string>
     <string name="lbl_no_top_rated_items">None of the top rated titles are in this library.</string>
