@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -63,6 +64,7 @@ internal fun TextListGrid(
 	onSortChange: ((SortMode) -> Unit)? = null,
 	labelFontSize: TextUnit = 16.sp,
 	labelFontWeight: FontWeight? = null,
+	iconTile: Boolean = false,
 	onItemClick: (BaseItemDto) -> Unit,
 ) {
 	val gridState = rememberLazyGridState()
@@ -97,6 +99,7 @@ internal fun TextListGrid(
 					label,
 					icon = iconFor?.invoke(item),
 					iconTint = iconTintFor?.invoke(item) ?: iconTint,
+					iconTile = iconTile,
 					focusRequester = if (index == 0) firstItemFocusRequester else null,
 					labelFontSize = labelFontSize,
 					labelFontWeight = labelFontWeight,
@@ -148,6 +151,7 @@ private fun TextRow(
 	label: String,
 	icon: Int?,
 	iconTint: Color,
+	iconTile: Boolean,
 	focusRequester: FocusRequester?,
 	labelFontSize: TextUnit,
 	labelFontWeight: FontWeight?,
@@ -165,27 +169,52 @@ private fun TextRow(
 			.background(if (focused) Color(0x33FFFFFF) else Color.Transparent),
 		contentAlignment = Alignment.Center,
 	) {
-		Row(
-			verticalAlignment = Alignment.CenterVertically,
-			modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
-		) {
-			if (icon != null) {
-				Image(
-					painter = painterResource(icon),
-					contentDescription = null,
-					colorFilter = ColorFilter.tint(iconTint),
-					modifier = Modifier.size(24.dp),
-				)
-				Spacer(modifier = Modifier.width(8.dp))
-			}
+		if (iconTile) {
+			Column(
+				horizontalAlignment = Alignment.CenterHorizontally,
+				modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+			) {
+				if (icon != null) {
+					Image(
+						painter = painterResource(icon),
+						contentDescription = null,
+						colorFilter = ColorFilter.tint(iconTint),
+						modifier = Modifier.size(48.dp),
+					)
+					Spacer(modifier = Modifier.height(4.dp))
+				}
 
-			Text(
-				text = label,
-				fontSize = labelFontSize,
-				fontWeight = labelFontWeight,
-				color = Color.White,
-				textAlign = TextAlign.Center,
-			)
+				Text(
+					text = label,
+					fontSize = labelFontSize,
+					fontWeight = labelFontWeight,
+					color = Color.White,
+					textAlign = TextAlign.Center,
+				)
+			}
+		} else {
+			Row(
+				verticalAlignment = Alignment.CenterVertically,
+				modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+			) {
+				if (icon != null) {
+					Image(
+						painter = painterResource(icon),
+						contentDescription = null,
+						colorFilter = ColorFilter.tint(iconTint),
+						modifier = Modifier.size(24.dp),
+					)
+					Spacer(modifier = Modifier.width(8.dp))
+				}
+
+				Text(
+					text = label,
+					fontSize = labelFontSize,
+					fontWeight = labelFontWeight,
+					color = Color.White,
+					textAlign = TextAlign.Center,
+				)
+			}
 		}
 	}
 }

@@ -37,6 +37,7 @@ class GenrePickerFragment : Fragment() {
 	private lateinit var itemType: BaseItemKind
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
+	private var sortMode = SortMode.A_Z
 	private var genreList: List<BaseItemDto> = emptyList()
 	private val genreCounts = mutableStateOf<Map<String, Int>>(emptyMap())
 
@@ -69,6 +70,9 @@ class GenrePickerFragment : Fragment() {
 					counts = genreCounts.value,
 					iconFor = { getGenreStyle(it.name).icon },
 					iconTintFor = { getGenreStyle(it.name).color },
+					sortMode = sortMode,
+					onSortChange = { sortMode = it; rebuildItems() },
+					iconTile = true,
 				) { item -> onClick(item) }
 			}
 		}
@@ -101,13 +105,21 @@ class GenrePickerFragment : Fragment() {
 
 		if (!isAdded) return@launch
 
-		genreList = genres.filter { !it.name.isNullOrBlank() }.sortedBy { it.name }
+		genreList = genres.filter { !it.name.isNullOrBlank() }
 		rebuildItems()
 		launch { withContext(Dispatchers.IO) { fetchGenreCounts() } }
 	}
 
 	private fun rebuildItems() {
-		items.value = genreList.map { genre ->
+		val counts = genreCounts.value
+		val sorted = when (sortMode) {
+			SortMode.A_Z -> genreList.sortedBy { it.name.orEmpty() }
+			SortMode.Z_A -> genreList.sortedByDescending { it.name.orEmpty() }
+			SortMode.MOST -> genreList.sortedByDescending { counts[it.name] ?: 0 }
+			SortMode.FEWEST -> genreList.sortedBy { counts[it.name] ?: 0 }
+		}
+
+		items.value = sorted.map { genre ->
 			val name = genre.name.orEmpty()
 			val json = buildJsonObject {
 				put("Name", name)
