@@ -1,6 +1,7 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup
@@ -46,6 +47,11 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 		const val MAX_ROWS = 30
 		const val CHUNK_SIZE = 50
 		const val CARD_HEIGHT = 150
+
+		// Sort pill chip colours, matching SortPillRow / BrowseGlass in TextListGrid.kt.
+		const val PILL_BORDER_INACTIVE = 0x1FFFFFFF
+		const val PILL_FILL = 0x33FFFFFF
+		val PILL_TEXT_INACTIVE = 0xB3FFFFFF.toInt()
 	}
 
 	private val apiClient by inject<ApiClient>()
@@ -108,21 +114,31 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 	private fun refreshRows() {
 		rowsAdapter.clear()
 
-		// Sort pills (A–Z / Z–A / Most / Fewest).
+		// Sort pills (A–Z / Z–A / Most / Fewest), styled as pill chips.
 		val sortRowAdapter = ArrayObjectAdapter(object : Presenter() {
 			override fun onCreateViewHolder(parent: ViewGroup): ViewHolder {
 				val tv = TextView(parent.context).apply {
 					isFocusable = true
 					isFocusableInTouchMode = true
 					gravity = Gravity.CENTER
-					setTextColor(Color.WHITE)
 					textSize = 14f
 					setPadding(24, 10, 24, 10)
 				}
 				return object : ViewHolder(tv) {}
 			}
 			override fun onBindViewHolder(vh: Presenter.ViewHolder, item: Any?) {
-				(vh.view as TextView).text = (item as? BaseItemDtoBaseRowItem)?.baseItem?.name
+				val pillItem = item as? BaseItemDtoBaseRowItem
+				val active = pillItem?.baseItem?.originalTitle
+					?.removePrefix("__pill__")
+					?.let { SortMode.valueOf(it) } == sortMode
+				val tv = vh.view as TextView
+				tv.text = pillItem?.baseItem?.name
+				tv.background = pillBackground(active, tv.isFocused)
+				tv.setTextColor(if (active) Color.WHITE else PILL_TEXT_INACTIVE)
+				tv.setOnFocusChangeListener { _, hasFocus ->
+					tv.background = pillBackground(active, hasFocus)
+					tv.setTextColor(if (active) Color.WHITE else PILL_TEXT_INACTIVE)
+				}
 			}
 			override fun onUnbindViewHolder(vh: Presenter.ViewHolder) {}
 		})
@@ -173,6 +189,14 @@ class TagBrowseRowsFragment : RowsSupportFragment() {
 			rowsAdapter.add(row)
 		}
 	}
+
+	private fun pillBackground(isActive: Boolean, isFocused: Boolean): GradientDrawable =
+		GradientDrawable().apply {
+			shape = GradientDrawable.RECTANGLE
+			cornerRadius = 999f
+			setStroke(1, if (isActive) Color.WHITE else PILL_BORDER_INACTIVE)
+			setColor(if (isActive || isFocused) PILL_FILL else Color.TRANSPARENT)
+		}
 
 	private suspend fun fetchMatchingTags(): List<String> {
 		val userId = userRepository.currentUser.value?.id ?: return emptyList()
