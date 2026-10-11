@@ -124,6 +124,7 @@ class PersonListFragment : Fragment() {
 			buildJsonObject {
 				put("Name", name)
 				put("Id", id)
+				put("Type", "Person")
 			}.toString().let { Json.decodeFromString<BaseItemDto>(it) }
 		}
 	}
