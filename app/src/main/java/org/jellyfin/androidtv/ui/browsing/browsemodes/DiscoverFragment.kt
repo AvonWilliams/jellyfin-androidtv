@@ -95,7 +95,9 @@ class DiscoverFragment : Fragment() {
 		mode = BrowseMode.entries.first { it.key == requireArguments().getString(Extras.BrowseMode) }
 
 		sourcePreference = SystemPreferences.browseSourcePreference(mode.key)
-		activeSource.value = systemPreferences[sourcePreference].ifBlank { DEFAULT_BROWSE_SOURCE }
+		val persisted = systemPreferences[sourcePreference].ifBlank { DEFAULT_BROWSE_SOURCE }
+		val isShows = folder.collectionType == CollectionType.TVSHOWS
+		activeSource.value = if (getEnabledSources(mode, isShows).any { it.id == persisted }) persisted else DEFAULT_BROWSE_SOURCE
 		showMissing.value = systemPreferences[SystemPreferences.showMissingTitles]
 		emptyMessage = getString(R.string.msg_no_items_in_category)
 
