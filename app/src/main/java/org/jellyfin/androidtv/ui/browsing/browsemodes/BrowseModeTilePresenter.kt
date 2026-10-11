@@ -9,7 +9,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,18 +39,14 @@ import androidx.leanback.widget.Presenter
 import org.jellyfin.androidtv.R
 import org.jellyfin.androidtv.ui.base.Text
 
-// Six of these plus leanback's own padding have to fit the width of a 720p TV, which at
-// its usual density is only around 960dp.
-private const val TILE_WIDTH = 140
-private const val TILE_HEIGHT = 79
-private const val ICON_SIZE = 48
+// Primary tiles fill their grid cell at a fixed 160dp height (matching the web's 160px primary
+// tiles). Meta tiles are squarish (1:1), sized by the grid's column width.
+private const val PRIMARY_HEIGHT = 160
+private const val ICON_SIZE = 56
 private const val LABEL_SIZE = 20
 
-// The "Browse by…" meta tiles are visibly smaller than the primary row.
-private const val META_TILE_WIDTH = 110
-private const val META_TILE_HEIGHT = 62
-private const val META_ICON_SIZE = 38
-private const val META_LABEL_SIZE = 16
+private const val META_ICON_SIZE = 60
+private const val META_LABEL_SIZE = 15
 
 /** Shared glass surface colours, matching the web's `--jf-palette-background-paperChannel`
  *  (#202020) and divider border (`rgba(255, 255, 255, 0.12)`). */
@@ -90,16 +88,20 @@ internal fun BrowseModeTileContent(
 	tile: BrowseModeTile,
 	modifier: Modifier = Modifier,
 ) {
-	val width = if (tile.small) META_TILE_WIDTH else TILE_WIDTH
-	val height = if (tile.small) META_TILE_HEIGHT else TILE_HEIGHT
 	val iconSize = if (tile.small) META_ICON_SIZE else ICON_SIZE
 	val labelSize = if (tile.small) META_LABEL_SIZE else LABEL_SIZE
 	val radius = tileRadius(tile.small)
+	// Primary tiles fill the cell width at a fixed height; meta tiles are squarish (1:1).
+	val sizeModifier = if (tile.small) {
+		Modifier.fillMaxWidth().aspectRatio(1f)
+	} else {
+		Modifier.fillMaxWidth().height(PRIMARY_HEIGHT.dp)
+	}
 
 	Box(
 		contentAlignment = Alignment.Center,
 		modifier = modifier
-			.size(width.dp, height.dp)
+			.then(sizeModifier)
 			.clip(RoundedCornerShape(radius))
 			.background(BrowseGlass.surface(if (tile.small) 0.70f else 0.60f))
 			.border(1.dp, BrowseGlass.border, RoundedCornerShape(radius)),
