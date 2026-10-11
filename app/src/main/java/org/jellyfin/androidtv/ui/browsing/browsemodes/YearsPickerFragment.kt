@@ -43,6 +43,7 @@ class YearsPickerFragment : Fragment() {
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var yearList: List<Int> = emptyList()
 	private val yearCounts = mutableStateOf<Map<String, Int>>(emptyMap())
+	private var sortMode = SortMode.A_Z
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -68,6 +69,8 @@ class YearsPickerFragment : Fragment() {
 					title.value,
 					items.value,
 					counts = yearCounts.value,
+					sortMode = sortMode,
+					onSortChange = { sortMode = it; rebuildItems() },
 					labelFontSize = 32.sp,
 					labelFontWeight = FontWeight.Bold,
 				) { item -> onClick(item) }
@@ -104,7 +107,14 @@ class YearsPickerFragment : Fragment() {
 	}
 
 	private fun rebuildItems() {
-		items.value = yearList.map { year ->
+		val counts = yearCounts.value
+		val sorted = when (sortMode) {
+			SortMode.A_Z -> yearList.sorted()
+			SortMode.Z_A -> yearList.sortedDescending()
+			SortMode.MOST -> yearList.sortedByDescending { counts[it.toString()] ?: 0 }
+			SortMode.FEWEST -> yearList.sortedBy { counts[it.toString()] ?: 0 }
+		}
+		items.value = sorted.map { year ->
 			val label = year.toString()
 			val json = buildJsonObject {
 				put("Name", label)

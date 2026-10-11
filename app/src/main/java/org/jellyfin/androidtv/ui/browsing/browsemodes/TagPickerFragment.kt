@@ -103,7 +103,7 @@ class TagPickerFragment : Fragment() {
 
 		rawTags = tags
 		refreshGrid()
-		// Fetch counts in background for interleaved random shuffle.
+		// Fetch per-tag counts in the background; tiles show them and Most/Fewest sort by them.
 		launch { withContext(Dispatchers.IO) { fetchTagCounts() } }
 	}
 

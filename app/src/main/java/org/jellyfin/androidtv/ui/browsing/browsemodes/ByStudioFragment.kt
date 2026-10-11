@@ -44,6 +44,7 @@ class ByStudioFragment : Fragment() {
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var studioList: List<BaseItemDto> = emptyList()
 	private val studioCounts = mutableStateOf<Map<String, Int>>(emptyMap())
+	private var sortMode = SortMode.A_Z
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -67,7 +68,13 @@ class ByStudioFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value, counts = studioCounts.value) { item -> onClick(item) }
+				TextListGrid(
+					title.value,
+					items.value,
+					counts = studioCounts.value,
+					sortMode = sortMode,
+					onSortChange = { sortMode = it; rebuildItems() },
+				) { item -> onClick(item) }
 			}
 		}
 	}
@@ -96,13 +103,20 @@ class ByStudioFragment : Fragment() {
 
 		if (!isAdded) return@launch
 
-		studioList = studios.filter { !it.name.isNullOrBlank() }.sortedBy { it.name }
+		studioList = studios.filter { !it.name.isNullOrBlank() }
 		rebuildItems()
 		launch { withContext(Dispatchers.IO) { fetchStudioCounts() } }
 	}
 
 	private fun rebuildItems() {
-		items.value = studioList.map { studio ->
+		val counts = studioCounts.value
+		val sorted = when (sortMode) {
+			SortMode.A_Z -> studioList.sortedBy { it.name.orEmpty() }
+			SortMode.Z_A -> studioList.sortedByDescending { it.name.orEmpty() }
+			SortMode.MOST -> studioList.sortedByDescending { counts[it.name.orEmpty()] ?: 0 }
+			SortMode.FEWEST -> studioList.sortedBy { counts[it.name.orEmpty()] ?: 0 }
+		}
+		items.value = sorted.map { studio ->
 			val name = studio.name.orEmpty()
 			val json = buildJsonObject {
 				put("Name", name)

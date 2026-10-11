@@ -42,6 +42,7 @@ class DecadesPickerFragment : Fragment() {
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
 	private var decadeList: List<Int> = emptyList()
 	private val decadeCounts = mutableStateOf<Map<String, Int>>(emptyMap())
+	private var sortMode = SortMode.A_Z
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -63,7 +64,13 @@ class DecadesPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value, counts = decadeCounts.value) { item -> onClick(item) }
+				TextListGrid(
+					title.value,
+					items.value,
+					counts = decadeCounts.value,
+					sortMode = sortMode,
+					onSortChange = { sortMode = it; rebuildItems() },
+				) { item -> onClick(item) }
 			}
 		}
 	}
@@ -97,7 +104,14 @@ class DecadesPickerFragment : Fragment() {
 	}
 
 	private fun rebuildItems() {
-		items.value = decadeList.map { decadeStart ->
+		val counts = decadeCounts.value
+		val sorted = when (sortMode) {
+			SortMode.A_Z -> decadeList.sorted()
+			SortMode.Z_A -> decadeList.sortedDescending()
+			SortMode.MOST -> decadeList.sortedByDescending { counts["${it}s"] ?: 0 }
+			SortMode.FEWEST -> decadeList.sortedBy { counts["${it}s"] ?: 0 }
+		}
+		items.value = sorted.map { decadeStart ->
 			val label = "${decadeStart}s"
 			val json = buildJsonObject {
 				put("Name", label)
