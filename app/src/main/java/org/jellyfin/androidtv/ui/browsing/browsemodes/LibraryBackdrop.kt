@@ -1,5 +1,6 @@
 package org.jellyfin.androidtv.ui.browsing.browsemodes
 
+import android.os.Build
 import android.widget.ImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import org.jellyfin.androidtv.ui.composable.AsyncImage
 import org.jellyfin.androidtv.util.apiclient.getUrl
 import org.jellyfin.androidtv.util.apiclient.itemBackdropImages
 import org.jellyfin.androidtv.util.apiclient.itemImages
+import org.jellyfin.androidtv.util.apiclient.parentBackdropImages
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.ImageType
@@ -53,7 +55,8 @@ private val SCRIM_BRUSH = Brush.verticalGradient(
 internal fun LibraryBackdrop(folder: BaseItemDto) {
 	val api = koinInject<ApiClient>()
 	val backdropUrl = remember(folder) {
-		folder.itemBackdropImages.firstOrNull()?.getUrl(api, maxWidth = BACKDROP_MAX_WIDTH)
+		(folder.itemBackdropImages + folder.parentBackdropImages).firstOrNull()
+			?.getUrl(api, maxWidth = BACKDROP_MAX_WIDTH)
 			?: folder.itemImages[ImageType.PRIMARY]?.getUrl(api, maxWidth = BACKDROP_MAX_WIDTH)
 	}
 	val saturation = remember {
@@ -69,20 +72,24 @@ internal fun LibraryBackdrop(folder: BaseItemDto) {
 				modifier = Modifier.fillMaxSize(),
 			)
 
-			// Blurred + saturated copy, masked radially so only the edges frost.
-			AsyncImage(
-				url = backdropUrl,
-				scaleType = ImageView.ScaleType.CENTER_CROP,
-				colorFilter = saturation,
-				modifier = Modifier
-					.fillMaxSize()
-					.graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-					.drawWithContent {
-						drawContent()
-						drawRect(brush = FROST_MASK, blendMode = BlendMode.DstIn)
-					}
-					.blur(20.dp),
-			)
+			// Blurred + saturated copy, masked radially so only the edges frost. `blur` is a no-op
+			// below API 31, so the frost is a progressive enhancement: on older TVs the sharp base
+			// and scrim below still render as a clear dimmed backdrop.
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+				AsyncImage(
+					url = backdropUrl,
+					scaleType = ImageView.ScaleType.CENTER_CROP,
+					colorFilter = saturation,
+					modifier = Modifier
+						.fillMaxSize()
+						.graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+						.drawWithContent {
+							drawContent()
+							drawRect(brush = FROST_MASK, blendMode = BlendMode.DstIn)
+						}
+						.blur(20.dp),
+				)
+			}
 		}
 
 		Box(

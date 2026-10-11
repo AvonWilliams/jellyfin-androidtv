@@ -5,7 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
@@ -75,15 +78,18 @@ class AgeRatingPickerFragment : Fragment() {
 				val levelCounts = levelCodes.map { (level, codes) ->
 					level.key to codes.sumOf { counts[it] ?: 0 }
 				}.toMap()
-				TextListGrid(
-					title.value,
-					items.value,
-					counts = levelCounts,
-					iconFor = { ratingIconFor(it.originalTitle) },
-					iconTintFor = { ratingColorFor(it.originalTitle) },
-					sortMode = sortMode,
-					onSortChange = { sortMode = it; refreshGrid() },
-				) { item -> onClick(item) }
+				Box(modifier = Modifier.fillMaxSize()) {
+					LibraryBackdrop(folder = folder)
+					TextListGrid(
+						title.value,
+						items.value,
+						counts = levelCounts,
+						iconFor = { ratingIconFor(it.originalTitle) },
+						iconTintFor = { ratingColorFor(it.originalTitle) },
+						sortMode = sortMode,
+						onSortChange = { sortMode = it; refreshGrid() },
+					) { item -> onClick(item) }
+				}
 			}
 		}
 	}

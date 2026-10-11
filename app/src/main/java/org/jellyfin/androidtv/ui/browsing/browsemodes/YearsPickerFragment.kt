@@ -4,7 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -65,15 +68,18 @@ class YearsPickerFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(
-					title.value,
-					items.value,
-					counts = yearCounts.value,
-					sortMode = sortMode,
-					onSortChange = { sortMode = it; rebuildItems() },
-					labelFontSize = 32.sp,
-					labelFontWeight = FontWeight.Bold,
-				) { item -> onClick(item) }
+				Box(modifier = Modifier.fillMaxSize()) {
+					LibraryBackdrop(folder = folder)
+					TextListGrid(
+						title.value,
+						items.value,
+						counts = yearCounts.value,
+						sortMode = sortMode,
+						onSortChange = { sortMode = it; rebuildItems() },
+						labelFontSize = 32.sp,
+						labelFontWeight = FontWeight.Bold,
+					) { item -> onClick(item) }
+				}
 			}
 		}
 	}
