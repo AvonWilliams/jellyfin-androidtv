@@ -27,17 +27,21 @@ internal suspend fun fetchItemCounts(
 	type: String,
 	parentId: UUID,
 	itemType: BaseItemKind,
+	personTypes: String? = null,
 ): Map<String, Int> {
 	PickerCountsCache.get(cacheKey)?.let { return it }
+
+	val queryParameters = mutableMapOf(
+		"type" to type,
+		"parentId" to parentId.toString(),
+		"itemTypes" to itemType.serialName,
+	)
+	if (personTypes != null) queryParameters["personTypes"] = personTypes
 
 	val counts = try {
 		api.get<Map<String, Int>>(
 			pathTemplate = "/Discover/Counts",
-			queryParameters = mapOf(
-				"type" to type,
-				"parentId" to parentId.toString(),
-				"itemTypes" to itemType.serialName,
-			),
+			queryParameters = queryParameters,
 		).content
 	} catch (error: Exception) {
 		Timber.e(error, "Failed to fetch picker counts from /Discover/Counts (type=%s)", type)

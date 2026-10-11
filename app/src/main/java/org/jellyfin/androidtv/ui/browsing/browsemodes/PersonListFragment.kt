@@ -25,6 +25,8 @@ import org.jellyfin.androidtv.ui.navigation.NavigationRepository
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.get
 import org.jellyfin.sdk.model.api.BaseItemDto
+import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.PersonKind
 import org.koin.android.ext.android.inject
 import timber.log.Timber
@@ -54,14 +56,23 @@ class PersonListFragment : Fragment() {
 
 	private lateinit var folder: BaseItemDto
 	private lateinit var personType: String
+	private lateinit var itemType: BaseItemKind
 	private val title = mutableStateOf("")
 	private val items = mutableStateOf<List<BaseItemDto>>(emptyList())
+	private var personList: List<BaseItemDto> = emptyList()
+	private val personCounts = mutableStateOf<Map<String, Int>>(emptyMap())
+	private var sortMode = SortMode.A_Z
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
 		folder = Json.decodeFromString<BaseItemDto>(requireArguments().getString(Extras.Folder)!!)
 		personType = requireArguments().getString(Extras.PersonType) ?: PersonKind.ACTOR.serialName
+
+		itemType = when (folder.collectionType) {
+			CollectionType.TVSHOWS -> BaseItemKind.SERIES
+			else -> BaseItemKind.MOVIE
+		}
 
 		title.value = when (personType) {
 			PersonKind.DIRECTOR.serialName -> getString(R.string.lbl_browse_mode_directors)
@@ -77,7 +88,13 @@ class PersonListFragment : Fragment() {
 	): View = ComposeView(requireContext()).apply {
 		setContent {
 			JellyfinTheme {
-				TextListGrid(title.value, items.value) { item -> onClick(item) }
+				TextListGrid(
+					title.value,
+					items.value,
+					counts = personCounts.value,
+					sortMode = sortMode,
+					onSortChange = { sortMode = it; rebuildItems() },
+				) { item -> onClick(item) }
 			}
 		}
 	}
@@ -101,7 +118,30 @@ class PersonListFragment : Fragment() {
 
 		if (!isAdded) return@launch
 
-		items.value = persons
+		personList = persons
+		rebuildItems()
+		launch { withContext(Dispatchers.IO) { fetchPersonCounts() } }
+	}
+
+	private fun rebuildItems() {
+		val counts = personCounts.value
+		items.value = when (sortMode) {
+			SortMode.A_Z -> personList.sortedBy { it.name.orEmpty() }
+			SortMode.Z_A -> personList.sortedByDescending { it.name.orEmpty() }
+			SortMode.MOST -> personList.sortedByDescending { counts[it.name.orEmpty()] ?: 0 }
+			SortMode.FEWEST -> personList.sortedBy { counts[it.name.orEmpty()] ?: 0 }
+		}
+	}
+
+	private suspend fun fetchPersonCounts() {
+		personCounts.value = fetchItemCounts(
+			api = apiClient,
+			cacheKey = countCacheKey(folder.id, "personitems:$personType"),
+			type = "personitems",
+			parentId = folder.id,
+			itemType = itemType,
+			personTypes = personType,
+		)
 	}
 
 	private suspend fun fetchPersons(): List<BaseItemDto> {
